@@ -27,6 +27,8 @@ from collections import Counter
 from sklearn.feature_extraction import DictVectorizer
 from sklearn.preprocessing import LabelEncoder
 from sklearn.model_selection import train_test_split
+# --- FIX: Add the missing import for saving sparse matrices ---
+from scipy.sparse import save_npz
 
 # --- Configuration ---
 # This section contains all the key settings for the script.
@@ -166,3 +168,4 @@ if __name__ == "__main__":
         pickle.dump(label_encoder, f)
     print("✅ All artifacts saved successfully.")
     print("\n--- DATA PREPARATION COMPLETE ---")
+

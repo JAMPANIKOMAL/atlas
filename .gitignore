@@ -1,0 +1,66 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Conda environment files
+.conda/
+env/
+venv/
+.env
+.venv
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Jupyter Notebook checkpoints
+.ipynb_checkpoints
+
+# Data files - Crucial to ignore large data and processed files!
+data/processed/
+data/raw/
+*.csv
+*.fasta
+*.fastq
+*.gz
+*.npz
+*.npy
+
+# Model files - Crucial to ignore large model files!
+models/
+*.keras
+*.h5
+*.pkl
+*.model
+
+# Report files
+reports/
+
+# IDE / Editor specific files
+.vscode/
+.idea/
+.suo
+.ntvs
+*.njsproj
+*.sln
+*.sw?
+
+# OS generated files
+.DS_Store
+Thumbs.db

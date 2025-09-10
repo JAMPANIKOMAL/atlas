@@ -1,10 +1,10 @@
-# A.T.L.A.S. v3: Project Overview
+# A.T.L.A.S.: Project Overview
 
 This document outlines the vision and architecture for the third version of the A.T.L.A.S. project.
 
 ## Core Philosophy
 
-A.T.L.A.S. v3 is built on a hybrid development model that combines the strengths of interactive development with the stability of production scripts.
+A.T.L.A.S. is built on a hybrid development model that combines the strengths of interactive development with the stability of production scripts.
 
 **Research & Development (R&D) in Jupyter Notebooks**: All new features, pipeline refinements, and model experiments are first developed in Jupyter Notebooks (`/notebooks`). This allows for rapid, cell-by-cell testing, data visualization, and interactive feedback.
 
@@ -15,7 +15,7 @@ A.T.L.A.S. v3 is built on a hybrid development model that combines the strengths
 The project is organized into the following key directories:
 
 ```
-atlas-v3/
+atlas/
 ├── data/
 │   ├── raw/          # Raw, original database files (e.g., SILVA.fasta)
 │   └── processed/    # Clean, numerical data ready for training (.npz, .npy)

@@ -1,4 +1,4 @@
-# 16S Pipeline v3: Data Preparation Workflow
+# 16S Pipeline: Data Preparation Workflow
 
 This document details the refined step-by-step workflow for preparing the 16S (prokaryotic) data, as developed in the `01_Refining_16S_Preparation.ipynb` notebook.
 

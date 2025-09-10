@@ -1,5 +1,5 @@
 # =============================================================================
-# ATLAS v3 - 18S PIPELINE - SCRIPT 1: PREPARE DATA
+# ATLAS - 18S PIPELINE - SCRIPT 1: PREPARE DATA
 # =============================================================================
 # This script prepares the eukaryotic data from the SILVA database.
 #

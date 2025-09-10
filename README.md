@@ -1,4 +1,4 @@
-# A.T.L.A.S. v3
+# A.T.L.A.S.
 
 This repository contains the third version of the Artificial Taxonomic Learning & Analysis System (A.T.L.A.S.).
 

@@ -1,5 +1,5 @@
 # =============================================================================
-# ATLAS v3 - 18S PIPELINE - SCRIPT 2: TRAIN MODEL
+# ATLAS - 18S PIPELINE - SCRIPT 2: TRAIN MODEL
 # =============================================================================
 # This script trains, evaluates, and saves the 18S neural network classifier.
 # It uses the robust memory-safe workflow developed for the 16S pipeline.

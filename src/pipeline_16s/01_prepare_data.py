@@ -1,5 +1,5 @@
 # =============================================================================
-# ATLAS v3 - 16S PIPELINE - SCRIPT 1: PREPARE DATA
+# ATLAS - 16S PIPELINE - SCRIPT 1: PREPARE DATA
 # =============================================================================
 # This script converts the raw SILVA FASTA file into clean, numerical,
 # and model-ready training and testing sets.

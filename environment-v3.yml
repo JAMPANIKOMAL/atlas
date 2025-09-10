@@ -1,4 +1,4 @@
-name: atlas-v3
+name: atlas
 channels:
   - conda-forge
   - defaults
@@ -12,7 +12,7 @@ dependencies:
   - scipy
   - tqdm
 
-  # --- NEW LIBRARIES for v3 ---
+  # --- NEW LIBRARIES ---
   # For R&D and visualization
   - jupyterlab
   - matplotlib

@@ -1,5 +1,5 @@
 # =============================================================================
-# ATLAS v3 - 16S PIPELINE - SCRIPT 2: TRAIN MODEL
+# ATLAS - 16S PIPELINE - SCRIPT 2: TRAIN MODEL
 # =============================================================================
 # This script trains, evaluates, and saves the 16S neural network classifier.
 #

@@ -1,17 +1,16 @@
 # =============================================================================
-# ATLAS - ITS PIPELINE - SCRIPT 2: TRAIN MODEL
+# ATLAS - ITS PIPELINE - SCRIPT 2: TRAIN MODEL (IMPROVED ACCURACY)
 # =============================================================================
-# This script trains, evaluates, and saves the ITS (Fungi) neural network
-# classifier, completing the final "Filter" pipeline.
+# This script trains, evaluates, and saves the ITS neural network classifier.
 #
-# WORKFLOW:
-# 1.  Loads the pre-processed ITS data from disk.
-# 2.  Defines the Keras Sequential model architecture.
-# 3.  Compiles and trains the model using a validation split and callbacks.
-# 4.  Saves the trained model immediately after training.
-# 5.  Employs a memory-safe workflow to clear the session, reload the model,
-#     and perform a final, unbiased evaluation on the unseen test set with
-#     a controlled batch size to prevent memory-related crashes.
+# ACCURACY IMPROVEMENTS:
+#   -   Reduced Adam Optimizer Learning Rate: A smaller learning rate
+#       (0.0001) is used to prevent the model from overfitting too quickly on
+#       this complex dataset, allowing for more stable learning.
+#   -   Increased EarlyStopping Patience: Patience has been increased from
+#       3 to 5 epochs, giving the model more opportunities to find the optimal
+#       weights before stopping.
+#
 # =============================================================================
 
 # --- Imports ---
@@ -25,13 +24,11 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, Callback
 from sklearn.model_selection import train_test_split
+# --- IMPORT FOR CUSTOM OPTIMIZER ---
+from tensorflow.keras.optimizers import Adam
 
 # --- Configuration ---
-try:
-    project_root = Path(__file__).parent.parent.parent
-except NameError:
-    project_root = Path.cwd().parent if Path.cwd().name == 'notebooks' else Path.cwd()
-
+project_root = Path(__file__).parent.parent.parent
 PROCESSED_DATA_DIR = project_root / "data" / "processed"
 MODELS_DIR = project_root / "models"
 EPOCHS = 50
@@ -73,13 +70,20 @@ if __name__ == "__main__":
         Dropout(0.5),
         Dense(num_classes, activation='softmax')
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    
+    # --- ACCURACY IMPROVEMENT: Use Adam optimizer with a lower learning rate ---
+    optimizer = Adam(learning_rate=0.0001)
+    
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 
     # --- Step 3: Train Model ---
     print("\n--- Step 3: Preparing Data and Starting Training ---")
     X_train_final, X_val, y_train_final, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_STATE, stratify=y_train)
-    early_stopping = EarlyStopping(monitor='val_accuracy', patience=3, verbose=1, restore_best_weights=True)
+    
+    # --- ACCURACY IMPROVEMENT: Increase patience for EarlyStopping ---
+    early_stopping = EarlyStopping(monitor='val_accuracy', patience=5, verbose=1, restore_best_weights=True)
+    
     history = model.fit(
         X_train_final, y_train_final,
         epochs=EPOCHS,
@@ -100,12 +104,11 @@ if __name__ == "__main__":
     tf.keras.backend.clear_session()
     gc.collect()
 
-    # Load and evaluate with controlled batch size
+    # Load and evaluate
     loaded_model = load_model(MODEL_PATH)
     print("  - Evaluating model on the unseen test set...")
     loss, accuracy = loaded_model.evaluate(X_test, y_test, batch_size=16, verbose=0)
     
-    # --- Final ASCII Art Confirmation ---
     print("\n" + "-"*42)
     print("--- Final ITS Model Evaluation ---")
     print(f"  - Test Set Loss:     {loss:.4f}")
@@ -113,4 +116,5 @@ if __name__ == "__main__":
     print("-"*42)
     print("\n" + "="*50)
     print("         ITS PIPELINE SCRIPT COMPLETE")
-    print("="*50 + "\n")
+    print("="*50)
+

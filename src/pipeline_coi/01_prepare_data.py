@@ -1,10 +1,11 @@
 # =============================================================================
-# ATLAS - COI PIPELINE - SCRIPT 1: PREPARE DATA (FINAL BATCH PROCESSING)
+# ATLAS - COI PIPELINE - SCRIPT 1: PREPARE DATA (FINAL VERSION)
 # =============================================================================
 #
-# NOTE: This version is designed to run on the `BOLD_curated_subset_500k.fasta`
-#       file, which should be generated first by the `00_curate_bold_dataset.py`
-#       script.
+# FINAL MODIFICATION:
+#   -   Reduced HASHING_FEATURES from 2**20 to 2**18 to prevent GPU VRAM
+#       exhaustion during model training. This is the final optimization
+#       to ensure the pipeline can run on standard hardware.
 #
 # =============================================================================
 
@@ -30,7 +31,6 @@ PROCESSED_DATA_DIR.mkdir(parents=True, exist_ok=True)
 MODELS_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- File Paths ---
-# --- MODIFICATION: Point to the new, smaller 500k sequence file ---
 INPUT_FASTA_PATH = RAW_DATA_DIR / "BOLD_curated_subset_500k.fasta"
 
 # --- Parameters ---
@@ -39,8 +39,8 @@ TARGET_RANK = 'genus'
 MIN_CLASS_MEMBERS = 3
 TEST_SPLIT_SIZE = 0.2
 RANDOM_STATE = 42
-HASHING_FEATURES = 2**20
-# Reduced batch size for the smaller dataset
+# --- FINAL FIX: Reduce feature space to prevent GPU OOM errors ---
+HASHING_FEATURES = 2**18 # (262,144 features)
 BATCH_SIZE = 50000
 
 # --- Helper Functions (Same as before) ---
@@ -89,10 +89,9 @@ if __name__ == "__main__":
 
     if not INPUT_FASTA_PATH.exists():
         print(f"[ERROR] Input FASTA file not found at: {INPUT_FASTA_PATH}")
-        print("Please ensure you have run the curation script `00_curate_bold_dataset.py` first.")
+        print("Please ensure you have run the curation script `00_curate_bold_dataset.py` with the 500k setting.")
         exit()
 
-    # --- Step 1 & 2: Parse Taxonomy and Clean Data ---
     print("\n--- Step 1 & 2: Parsing taxonomy and cleaning data... ---")
     all_records = list(tqdm(SeqIO.parse(INPUT_FASTA_PATH, "fasta"), desc="  - Reading records into memory"))
     labels = [parse_bold_taxonomy_v2(rec.description)['genus'] for rec in all_records]
@@ -109,7 +108,6 @@ if __name__ == "__main__":
     del df, df_cleaned, df_filtered, labels, class_counts, classes_to_keep, all_ids
     gc.collect()
 
-    # --- Step 3 & 4: Vectorize in Batches ---
     print(f"\n--- Step 3 & 4: Vectorizing {num_final_sequences} sequences in batches of {BATCH_SIZE}... ---")
     vectorizer = HashingVectorizer(
         analyzer='char', ngram_range=(KMER_SIZE, KMER_SIZE),
@@ -131,12 +129,10 @@ if __name__ == "__main__":
     y_encoded = label_encoder.fit_transform(y)
     print(f"  - Feature matrix shape: {X.shape}")
 
-    # --- Step 5: Split Data ---
     print("\n--- Step 5: Splitting data... ---")
     X_train, X_test, y_train, y_test = train_test_split(X, y_encoded, test_size=TEST_SPLIT_SIZE, random_state=RANDOM_STATE, stratify=y_encoded)
     print(f"  - Training set shape: {X_train.shape}")
 
-    # --- Step 6: Save Artifacts ---
     print("\n--- Step 6: Saving all COI artifacts to disk... ---")
     save_npz(PROCESSED_DATA_DIR / "X_train_coi.npz", X_train)
     save_npz(PROCESSED_DATA_DIR / "X_test_coi.npz", X_test)

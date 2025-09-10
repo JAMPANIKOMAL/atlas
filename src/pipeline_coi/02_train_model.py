@@ -1,7 +1,12 @@
 # =============================================================================
-# ATLAS - COI PIPELINE - SCRIPT 2: TRAIN MODEL
+# ATLAS - COI PIPELINE - SCRIPT 2: TRAIN MODEL (FINAL VERSION)
 # =============================================================================
-# This script trains, evaluates, and saves the COI neural network classifier.
+#
+# FINAL MODIFICATION:
+#   -   Implements a "patient learning" strategy with a reduced learning
+#       rate and increased early stopping patience to ensure the model
+#       trains effectively on the large, complex dataset without overfitting.
+#
 # =============================================================================
 
 # --- Imports ---
@@ -15,13 +20,14 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, Callback
 from sklearn.model_selection import train_test_split
+from tensorflow.keras.optimizers import Adam
 
 # --- Configuration ---
 project_root = Path(__file__).parent.parent.parent
 PROCESSED_DATA_DIR = project_root / "data" / "processed"
 MODELS_DIR = project_root / "models"
 EPOCHS = 50
-BATCH_SIZE = 16
+BATCH_SIZE = 16 # Keep batch size small for GPU memory
 RANDOM_STATE = 42
 
 # --- Custom Callback for Clean Output ---
@@ -59,13 +65,17 @@ if __name__ == "__main__":
         Dropout(0.5),
         Dense(num_classes, activation='softmax')
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    
+    optimizer = Adam(learning_rate=0.0001)
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 
     # --- Step 3: Train Model ---
     print("\n--- Step 3: Preparing Data and Starting Training ---")
     X_train_final, X_val, y_train_final, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_STATE, stratify=y_train)
-    early_stopping = EarlyStopping(monitor='val_accuracy', patience=3, verbose=1, restore_best_weights=True)
+    
+    early_stopping = EarlyStopping(monitor='val_accuracy', patience=5, verbose=1, restore_best_weights=True)
+    
     history = model.fit(
         X_train_final, y_train_final,
         epochs=EPOCHS,
@@ -80,16 +90,20 @@ if __name__ == "__main__":
     print("\n--- Step 4: Saving, Reloading, and Evaluating Model ---")
     MODEL_PATH = MODELS_DIR / "coi_genus_classifier.keras"
     model.save(MODEL_PATH)
-    print(f"Model saved to: {MODEL_PATH}")
+    print(f"  - Model saved to: {MODEL_PATH}")
 
     tf.keras.backend.clear_session()
     gc.collect()
 
     loaded_model = load_model(MODEL_PATH)
-    loss, accuracy = loaded_model.evaluate(X_test, y_test, verbose=0)
+    print("  - Evaluating model on the unseen test set...")
+    loss, accuracy = loaded_model.evaluate(X_test, y_test, batch_size=BATCH_SIZE, verbose=0)
     
-    print("\n--- Final COI Model Evaluation ---")
-    print(f"Test Set Loss:     {loss:.4f}")
-    print(f"Test Set Accuracy: {accuracy:.2%}")
-    print("--------------------------------")
-    print("\n--- COI PIPELINE COMPLETE ---")
+    print("\n" + "-"*42)
+    print("--- Final COI Model Evaluation ---")
+    print(f"  - Test Set Loss:     {loss:.4f}")
+    print(f"  - Test Set Accuracy: {accuracy:.2%}")
+    print("-"*42)
+    print("\n" + "="*50)
+    print("         COI PIPELINE SCRIPT COMPLETE")
+    print("="*50)

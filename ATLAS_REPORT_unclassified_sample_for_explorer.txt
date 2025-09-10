@@ -1,0 +1,264 @@
+============================================================
+       ATLAS: AI Taxonomic Learning & Analysis System
+                         FINAL REPORT
+============================================================
+
+Input File: unclassified_sample_for_explorer.fasta
+Total Sequences Analyzed: 5000
+
+------------------------------
+Part 1: Known Organisms (Filter Results)
+------------------------------
+
+- None: 2172 sequences
+- Bacillus: 262 sequences
+- Streptomyces: 171 sequences
+- Pseudomonas: 157 sequences
+- Streptococcus: 84 sequences
+- Mycoplasma: 78 sequences
+- Acari: 59 sequences
+- Stenotrophomonas: 50 sequences
+- Vibrio: 48 sequences
+- Paenibacillus: 47 sequences
+- Microbacterium: 43 sequences
+- Burkholderia-Caballeronia-Paraburkholderia: 43 sequences
+- Staphylococcus: 42 sequences
+- Chaetonotida: 41 sequences
+- Enterococcus: 41 sequences
+- Halomonas: 36 sequences
+- Campylobacter: 35 sequences
+- Brevundimonas: 35 sequences
+- Actinomyces: 31 sequences
+- Allorhizobium-Neorhizobium-Pararhizobium-Rhizobium: 30 sequences
+- Serratia: 30 sequences
+- Micromonospora: 30 sequences
+- Enterobacter: 29 sequences
+- Escherichia-Shigella: 29 sequences
+- Caulobacter: 28 sequences
+- Aeromonas: 25 sequences
+- Bivalvulida: 24 sequences
+- Micromonas: 22 sequences
+- Acinetobacter: 22 sequences
+- Bradyrhizobium: 21 sequences
+- Pseudonocardia: 21 sequences
+- Zea: 20 sequences
+- Mycobacterium: 20 sequences
+- Rhodococcus: 20 sequences
+- Hemiptera: 19 sequences
+- Pseudoalteromonas: 19 sequences
+- Lysinibacillus: 19 sequences
+- Sphingomonas: 19 sequences
+- Legionella: 19 sequences
+- Theileria: 18 sequences
+- Histophilus: 18 sequences
+- Coleoptera: 18 sequences
+- Trichocephalida: 18 sequences
+- Methylobacterium-Methylorubrum: 17 sequences
+- Nocardia: 15 sequences
+- Chryseobacterium: 15 sequences
+- Corynebacterium: 15 sequences
+- Lactococcus: 15 sequences
+- Haemophilus: 14 sequences
+- Lactiplantibacillus: 14 sequences
+- Lactobacillus: 14 sequences
+- Shewanella: 13 sequences
+- Neisseria: 13 sequences
+- Porphyra-Pyropia: 12 sequences
+- Ensifer: 12 sequences
+- Flavobacterium: 12 sequences
+- Actinoplanes: 12 sequences
+- Klebsiella: 11 sequences
+- Diptera: 11 sequences
+- Novosphingobium: 11 sequences
+- Rhabditida: 11 sequences
+- Pseudoscorpiones: 11 sequences
+- Sarcocystis: 10 sequences
+- Haloarcula: 10 sequences
+- Actinomadura: 10 sequences
+- Cyclorhagida: 10 sequences
+- Halorubrum: 10 sequences
+- Lacticaseibacillus: 10 sequences
+- Sporomusa: 10 sequences
+- Teranympha: 10 sequences
+- Prevotella: 9 sequences
+- Lysobacter: 9 sequences
+- Stolidobranchia: 9 sequences
+- Mesorhizobium: 9 sequences
+- Sphingobium: 9 sequences
+- pool A symbiont group: 9 sequences
+- Multivalvulida: 9 sequences
+- Thermococcus: 9 sequences
+- Babesia: 8 sequences
+- Virgibacillus: 8 sequences
+- Geobacillus: 8 sequences
+- Mesonia: 8 sequences
+- Candidatus Phytoplasma: 8 sequences
+- Roseomonas: 8 sequences
+- Photobacterium: 8 sequences
+- Alteromonas: 8 sequences
+- Achromobacter: 8 sequences
+- Ralstonia: 8 sequences
+- Micrococcus: 8 sequences
+- Amycolatopsis: 8 sequences
+- Nonomuraea: 8 sequences
+- Alcaligenes: 8 sequences
+- Enoplida: 8 sequences
+- Neoptera: 8 sequences
+- Maricaulis: 8 sequences
+- Komagataeibacter: 8 sequences
+- Clostridium sensu stricto 1: 7 sequences
+- Ochrobactrum: 7 sequences
+- Tylenchida: 7 sequences
+- Oceanospirillum: 7 sequences
+- Marinobacter: 7 sequences
+- Brevibacillus: 7 sequences
+- Diplogasterida: 7 sequences
+- Bursaphelenchus: 7 sequences
+- Salmonella: 7 sequences
+- Cupriavidus: 7 sequences
+- Rhodymeniophycidae: 7 sequences
+- Acanthamoeba: 7 sequences
+- Trypanosoma: 7 sequences
+- Opiliones: 7 sequences
+- Chlorobium: 7 sequences
+- Bacteroides: 6 sequences
+- Sphingobacterium: 6 sequences
+- Photorhabdus: 6 sequences
+- Trichonympha: 6 sequences
+- Eucarida: 6 sequences
+- Erythrobacter: 6 sequences
+- Desulfomicrobium: 6 sequences
+- Roseateles: 5 sequences
+- Nocardioides: 5 sequences
+- Leuconostoc: 5 sequences
+- Exiguobacterium: 5 sequences
+- Anaerococcus: 5 sequences
+- Fictibacillus: 5 sequences
+- Dyadobacter: 5 sequences
+- [Mycoplasma] group: 5 sequences
+- Heterobranchia: 5 sequences
+- Methanospirillum: 5 sequences
+- Candidatus Blochmannia: 5 sequences
+- Bifidobacterium: 4 sequences
+- Maribacter: 4 sequences
+- Helicobacter: 4 sequences
+- Acidovorax: 4 sequences
+- Sodalis: 4 sequences
+- Moritella: 4 sequences
+- Podocopida: 4 sequences
+- Azospirillum: 4 sequences
+- Limosilactobacillus: 4 sequences
+- Psychrobacter: 4 sequences
+- Wolbachia: 4 sequences
+- Mucilaginibacter: 4 sequences
+- Ulvophyceae: 4 sequences
+- Haplosclerida: 4 sequences
+- Methanosarcina: 4 sequences
+- Capitellida: 4 sequences
+- Nocardiopsis: 3 sequences
+- Capnocytophaga: 3 sequences
+- Tenacibaculum: 3 sequences
+- Pseudobutyrivibrio: 3 sequences
+- Mammalia: 3 sequences
+- Chlamydia: 3 sequences
+- Teleostei: 3 sequences
+- Blastocystis: 3 sequences
+- Muricauda: 3 sequences
+- Diplostraca: 3 sequences
+- Collinsella: 3 sequences
+- Streptosporangium: 3 sequences
+- Promicromonospora: 3 sequences
+- Azotobacter: 3 sequences
+- Arsenophonus: 3 sequences
+- Xenorhabdus: 3 sequences
+- Incertae Sedis: 3 sequences
+- Fusobacterium: 3 sequences
+- Paracoccus: 3 sequences
+- Methanimicrococcus: 3 sequences
+- Cellvibrio: 3 sequences
+- Arcanobacterium: 3 sequences
+- Bdellovibrio: 3 sequences
+- Saccharomonospora: 2 sequences
+- Prevotella_7: 2 sequences
+- Arthrobacter: 2 sequences
+- Peracarida: 2 sequences
+- Levilactobacillus: 2 sequences
+- Rickettsia: 2 sequences
+- Candidatus Portiera: 2 sequences
+- Ignatzschineria: 2 sequences
+- Marinospirillum: 2 sequences
+- Rheinheimera: 2 sequences
+- Spiroplasma: 2 sequences
+- Winogradskyella: 2 sequences
+- Cellulophaga: 2 sequences
+- Planococcus: 2 sequences
+- Kitasatospora: 2 sequences
+- Buchnera: 2 sequences
+- Ligilactobacillus: 2 sequences
+- Cohnella: 2 sequences
+- Delftia: 2 sequences
+- Chitinophaga: 2 sequences
+- Cutibacterium: 2 sequences
+- Limnothrix: 2 sequences
+- Anthoathecata: 2 sequences
+- Microcystis PCC-7914: 2 sequences
+- Myroides: 2 sequences
+- Latilactobacillus: 2 sequences
+- Microbispora: 2 sequences
+- Eimeria: 2 sequences
+- RumEn M2: 2 sequences
+- Paraclostridium: 2 sequences
+- Tunicatimonas: 2 sequences
+- Pseudovibrio: 1 sequences
+- Paramecium: 1 sequences
+- Anoxybacillus: 1 sequences
+- Euplotes: 1 sequences
+- Colwellia: 1 sequences
+- Dorylaimida: 1 sequences
+- Cobetia: 1 sequences
+- Thermobifida: 1 sequences
+- Marinomonas: 1 sequences
+- Enterogona: 1 sequences
+- Ichthyobodo: 1 sequences
+- Halanaerobium: 1 sequences
+- Echinoidea: 1 sequences
+- Enhydrobacter: 1 sequences
+- Candidatus Amphibiichlamydia: 1 sequences
+- Holomastigotoides: 1 sequences
+- Leptostraca: 1 sequences
+- Proteus: 1 sequences
+- Glycomyces: 1 sequences
+- Pseudarthrobacter: 1 sequences
+- Thiocapsa: 1 sequences
+- Plesiomonas: 1 sequences
+- Candidatus Nitrososphaera: 1 sequences
+- Eucestoda: 1 sequences
+- Pectobacterium: 1 sequences
+- Lamprocystis: 1 sequences
+- Monostilifera: 1 sequences
+- Methanobrevibacter: 1 sequences
+- Smithella: 1 sequences
+- Nitrospira: 1 sequences
+- Butyrivibrio: 1 sequences
+- Desulfovibrio: 1 sequences
+- Kentrophoros: 1 sequences
+- Giardia: 1 sequences
+- Pantoea: 1 sequences
+- Pontibacter: 1 sequences
+- Parachaela: 1 sequences
+- Desmodorida: 1 sequences
+- Desulfallas-Sporotomaculum: 1 sequences
+- Halobacillus: 1 sequences
+- Caenogastropoda: 1 sequences
+- Collembola: 1 sequences
+- Halobacteriovorax: 1 sequences
+- Leptothecata: 1 sequences
+- Plecoptera: 1 sequences
+- Vermamoeba: 1 sequences
+
+
+------------------------------
+Part 2: Novel Taxa Discovery (Explorer Results)
+------------------------------
+
+No unclassified sequences to explore.

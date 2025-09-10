@@ -2,12 +2,66 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; script-src 'self'">
     <title>ATLAS: AI Taxonomic Analysis System</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Inter', sans-serif; }
+        /* A minimal, embedded version of Tailwind CSS for CSP compliance */
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        :root { --font-sans: 'Inter', sans-serif; }
+        *, ::before, ::after { box-sizing: border-box; border-width: 0; border-style: solid; border-color: #e5e7eb; }
+        html { line-height: 1.5; -webkit-text-size-adjust: 100%; -moz-tab-size: 4; tab-size: 4; font-family: var(--font-sans); }
+        body { margin: 0; line-height: inherit; }
+        .bg-gray-900 { background-color: #111827; }
+        .text-gray-200 { color: #e5e7eb; }
+        .min-h-screen { min-height: 100vh; }
+        .flex { display: flex; }
+        .items-center { align-items: center; }
+        .justify-center { justify-content: center; }
+        .p-4 { padding: 1rem; }
+        .w-full { width: 100%; }
+        .max-w-4xl { max-width: 56rem; }
+        .mx-auto { margin-left: auto; margin-right: auto; }
+        .bg-gray-800 { background-color: #1f2937; }
+        .rounded-xl { border-radius: 0.75rem; }
+        .shadow-2xl { box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); }
+        .p-6 { padding: 1.5rem; }
+        .md\:p-10 { padding: 2.5rem; }
+        .space-y-8 > :not([hidden]) ~ :not([hidden]) { margin-top: 2rem; }
+        .text-center { text-align: center; }
+        .text-3xl { font-size: 1.875rem; }
+        .md\:text-4xl { font-size: 2.25rem; }
+        .font-bold { font-weight: 700; }
+        .text-white { color: #ffffff; }
+        .text-lg { font-size: 1.125rem; }
+        .text-blue-400 { color: #60a5fa; }
+        .mt-2 { margin-top: 0.5rem; }
+        .text-gray-400 { color: #9ca3af; }
+        .hidden { display: none; }
+        .space-y-4 > :not([hidden]) ~ :not([hidden]) { margin-top: 1rem; }
+        .space-x-3 > :not([hidden]) ~ :not([hidden]) { margin-left: 0.75rem; }
+        .h-8 { height: 2rem; }
+        .w-8 { width: 2rem; }
+        .animate-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        .opacity-25 { opacity: 0.25; }
+        .opacity-75 { opacity: 0.75; }
+        circle, path { stroke: currentColor; }
+        .text-xl { font-size: 1.25rem; }
+        .font-semibold { font-weight: 600; }
+        .text-gray-300 { color: #d1d5db; }
+        .mb-4 { margin-bottom: 1rem; }
+        .justify-between { justify-content: space-between; }
+        .text-2xl { font-size: 1.5rem; }
+        .bg-gray-700 { background-color: #374151; }
+        .hover\:bg-gray-600:hover { background-color: #4b5567; }
+        .py-2 { padding-top: 0.5rem; padding-bottom: 0.5rem; }
+        .px-4 { padding-left: 1rem; padding-right: 1rem; }
+        .rounded-lg { border-radius: 0.5rem; }
+        .transition { transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, -webkit-backdrop-filter; transition-property: background-color, border-color, color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter; transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1); transition-duration: 150ms; }
+        .bg-blue-600 { background-color: #2563eb; }
+        .hover\:bg-blue-700:hover { background-color: #1d4ed8; }
+        .py-3 { padding-top: 0.75rem; padding-bottom: 0.75rem; }
+        button { cursor: pointer; }
         .report-content {
             white-space: pre-wrap;
             word-wrap: break-word;
@@ -20,34 +74,58 @@
             max-height: 60vh;
             overflow-y: auto;
         }
-        /* Style for the real-time log view */
         #logContainer {
-            background-color: #111827;
+            background-color: #0c111d;
             color: #a5b4fc;
             font-family: monospace;
             font-size: 0.875rem;
             padding: 1rem;
             border-radius: 0.5rem;
-            height: 150px;
+            height: 250px;
             overflow-y: scroll;
             border: 1px solid #374151;
+            text-align: left;
+        }
+        .file-drop-area {
+            border: 2px dashed #4a5568;
+            border-radius: 0.5rem;
+            padding: 2.5rem;
+            text-align: center;
+            transition: background-color 0.2s ease-in-out, border-color 0.2s ease-in-out;
+        }
+        .file-drop-area.dragover {
+            background-color: #2d3748;
+            border-color: #63b3ed;
         }
     </style>
 </head>
 <body class="bg-gray-900 text-gray-200 flex items-center justify-center min-h-screen p-4">
 
     <div class="w-full max-w-4xl mx-auto bg-gray-800 rounded-xl shadow-2xl p-6 md:p-10 space-y-8">
-        <!-- Header Section -->
-        <div class="text-center">
-            <h1 class="text-3xl md:text-4xl font-bold text-white">ATLAS</h1>
+        
+        <!-- Header -->
+        <div class="text-center border-b border-gray-700 pb-6">
+            <div class="flex justify-center items-center space-x-3 mb-2">
+                 <svg class="h-8 w-8 text-blue-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M11.42 15.17L17.25 21A2.652 2.652 0 0021 17.25l-5.877-5.877M11.42 15.17l2.472-2.472a3.75 3.75 0 00-5.304-5.304l-2.472 2.472M11.42 15.17L5.877 21m5.543-5.877l-2.472 2.472a3.75 3.75 0 01-5.304-5.304l2.472-2.472" />
+                </svg>
+                <h1 class="text-3xl md:text-4xl font-bold text-white">ATLAS</h1>
+            </div>
             <p class="text-lg text-blue-400">AI Taxonomic Learning & Analysis System</p>
-            <p class="mt-2 text-gray-400">Click the button below to start a new analysis.</p>
         </div>
 
-        <!-- App Control Section -->
-        <div id="controlSection">
-            <button id="analyzeButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition duration-300 ease-in-out">
-                Select FASTA File & Start Analysis
+        <!-- Start/Upload Section -->
+        <div id="uploadSection" class="space-y-6">
+            <div id="fileDropArea" class="file-drop-area">
+                <div class="flex flex-col items-center justify-center">
+                    <svg class="w-12 h-12 text-gray-500 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-4-4V6a4 4 0 014-4h10a4 4 0 014 4v6a4 4 0 01-4 4H7z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 16v1a2 2 0 01-2 2H3a2 2 0 01-2-2V7a2 2 0 012-2h2m12 11v-3a2 2 0 00-2-2H9a2 2 0 00-2 2v3"></path></svg>
+                    <p id="uploadPrompt" class="text-gray-400">Drag & drop your FASTA file here, or click to select</p>
+                    <p id="fileNameDisplay" class="hidden text-green-400 font-medium mt-2"></p>
+                </div>
+                <input type="file" id="fileInput" class="hidden" accept=".fasta,.fa,.fna">
+            </div>
+            <button id="analyzeButton" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition disabled:bg-gray-600 disabled:cursor-not-allowed" disabled>
+                Analyze Sequences
             </button>
         </div>
 
@@ -67,7 +145,7 @@
         <div id="resultsSection" class="hidden">
             <div class="flex justify-between items-center mb-4">
                 <h2 class="text-2xl font-bold text-white">Biodiversity Report</h2>
-                <button id="startOverButton" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition duration-300">
+                <button id="startOverButton" class="bg-gray-700 hover:bg-gray-600 text-white font-semibold py-2 px-4 rounded-lg transition">
                     Start New Analysis
                 </button>
             </div>
@@ -76,44 +154,88 @@
     </div>
 
     <script>
+        const fileDropArea = document.getElementById('fileDropArea');
+        const fileInput = document.getElementById('fileInput');
+        const uploadPrompt = document.getElementById('uploadPrompt');
+        const fileNameDisplay = document.getElementById('fileNameDisplay');
         const analyzeButton = document.getElementById('analyzeButton');
-        const controlSection = document.getElementById('controlSection');
+        
+        const uploadSection = document.getElementById('uploadSection');
         const processingSection = document.getElementById('processingSection');
         const logContainer = document.getElementById('logContainer');
         const resultsSection = document.getElementById('resultsSection');
         const reportContainer = document.getElementById('reportContainer');
         const startOverButton = document.getElementById('startOverButton');
+        
+        let selectedFile = null;
+
+        // --- Event Listeners for File Upload ---
+        fileDropArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', (e) => handleFileSelect(e.target.files));
+
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            fileDropArea.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        fileDropArea.addEventListener('dragenter', () => fileDropArea.classList.add('dragover'));
+        fileDropArea.addEventListener('dragleave', () => fileDropArea.classList.remove('dragover'));
+        fileDropArea.addEventListener('drop', (e) => {
+            fileDropArea.classList.remove('dragover');
+            handleFileSelect(e.dataTransfer.files);
+        });
+
+        function handleFileSelect(files) {
+            if (files.length > 0) {
+                // We need to pass the file path to the backend, not the file object
+                selectedFile = files[0].path; 
+                uploadPrompt.classList.add('hidden');
+                fileNameDisplay.textContent = files[0].name; // Display just the name
+                fileNameDisplay.classList.remove('hidden');
+                analyzeButton.disabled = false;
+            }
+        }
 
         analyzeButton.addEventListener('click', async () => {
-            // 1. Hide the start button and show the processing view
-            controlSection.classList.add('hidden');
-            logContainer.textContent = 'Initializing analysis...\n';
-            processingSection.classList.remove('hidden');
+            if (selectedFile) {
+                uploadSection.classList.add('hidden');
+                logContainer.textContent = `Initializing analysis for: ${selectedFile}\n`;
+                processingSection.classList.remove('hidden');
 
-            // 2. Call the backend function exposed by preload.js
-            const result = await window.electronAPI.runAnalysis();
-            
-            // 3. Handle the final result
-            if (result.success) {
-                reportContainer.textContent = result.report;
-                processingSection.classList.add('hidden');
-                resultsSection.classList.remove('hidden');
-            } else {
-                logContainer.textContent += `\nANALYSIS FAILED:\n${result.message}`;
-                // Optionally, create a button to go back
+                // Call the backend with the path of the selected file
+                const result = await window.electronAPI.runAnalysis(selectedFile);
+                
+                if (result.success) {
+                    reportContainer.textContent = result.report;
+                    processingSection.classList.add('hidden');
+                    resultsSection.classList.remove('hidden');
+                } else {
+                    logContainer.textContent += `\n--- ANALYSIS FAILED ---\n${result.message}`;
+                }
             }
         });
 
-        // Listen for real-time log updates from the main process
         window.electronAPI.onLogUpdate((logMessage) => {
             logContainer.textContent += logMessage;
-            logContainer.scrollTop = logContainer.scrollHeight; // Auto-scroll
+            logContainer.scrollTop = logContainer.scrollHeight; 
         });
 
         startOverButton.addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            uploadPrompt.classList.remove('hidden');
+            fileNameDisplay.classList.add('hidden');
+            fileNameDisplay.textContent = '';
+            analyzeButton.disabled = true;
+
             resultsSection.classList.add('hidden');
-            controlSection.classList.remove('hidden');
+            uploadSection.classList.remove('hidden');
         });
     </script>
 </body>
 </html>
+

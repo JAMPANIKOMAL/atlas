@@ -1,7 +1,7 @@
 // main.js - This is the "backend" of the desktop application.
 // It handles window creation and communication with our Python scripts.
 
-const { app, BrowserWindow, ipcMain, dialog } = require('electron');
+const { app, BrowserWindow, ipcMain } = require('electron');
 const path = require('path');
 const { spawn } = require('child_process');
 const fs = require('fs');
@@ -34,30 +34,21 @@ app.on('window-all-closed', () => {
 });
 
 // This is the core logic that connects our UI to the Python backend.
-ipcMain.handle('run-analysis', async (event) => {
-    const projectRoot = path.join(__dirname, '..'); // Assumes app is in a subfolder of the project root
-
-    // 1. Ask the user to select their FASTA file
-    const { canceled, filePaths } = await dialog.showOpenDialog({
-        title: 'Select FASTA File',
-        properties: ['openFile'],
-        filters: [{ name: 'FASTA Files', extensions: ['fasta', 'fa', 'fna'] }]
-    });
-
-    if (canceled || filePaths.length === 0) {
-        return { success: false, message: 'File selection was canceled.' };
-    }
-
-    const inputFile = filePaths[0];
+// It now accepts the file path directly from the UI.
+ipcMain.handle('run-analysis', async (event, inputFile) => {
+    const isPackaged = app.isPackaged;
+    // When packaged, the 'extraResources' are in a predictable location.
+    // When in development, they are in the parent directory.
+    const projectRoot = isPackaged ? path.join(process.resourcesPath, '..') : path.join(__dirname, '..');
+    
     const predictScript = path.join(projectRoot, 'src', 'predict.py');
 
-    // 2. Run the `predict.py` script as a child process
+    // Run the `predict.py` script as a child process
     return new Promise((resolve) => {
         const pythonProcess = spawn('python', [predictScript, '--input_fasta', inputFile], {
-            cwd: projectRoot // Set the working directory to the project root
+            cwd: projectRoot 
         });
         
-        // 3. Stream the output from the Python script back to the UI in real-time
         pythonProcess.stdout.on('data', (data) => {
             event.sender.send('analysis-log', data.toString());
         });
@@ -66,7 +57,6 @@ ipcMain.handle('run-analysis', async (event) => {
             event.sender.send('analysis-log', `ERROR: ${data.toString()}`);
         });
 
-        // 4. When the script is finished, find the report and send it back
         pythonProcess.on('close', (code) => {
             if (code === 0) {
                 const reportFileName = `ATLAS_REPORT_${path.basename(inputFile, path.extname(inputFile))}.txt`;
@@ -85,3 +75,4 @@ ipcMain.handle('run-analysis', async (event) => {
         });
     });
 });
+

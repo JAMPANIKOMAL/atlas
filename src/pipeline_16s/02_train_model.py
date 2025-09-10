@@ -1,17 +1,16 @@
 # =============================================================================
-# ATLAS - 16S PIPELINE - SCRIPT 2: TRAIN MODEL
+# ATLAS - 16S PIPELINE - SCRIPT 2: TRAIN MODEL (IMPROVED ACCURACY)
 # =============================================================================
 # This script trains, evaluates, and saves the 16S neural network classifier.
 #
-# WORKFLOW:
-# 1.  Loads the pre-processed data from disk.
-# 2.  Defines the Keras Sequential model architecture.
-# 3.  Compiles the model.
-# 4.  Performs a final check for data quality before training.
-# 5.  Trains the model using the GPU, with a custom callback for clean output.
-# 6.  Saves the trained model immediately.
-# 7.  Clears memory, reloads the saved model, and evaluates its final
-#     performance on the unseen test set.
+# ACCURACY IMPROVEMENTS:
+#   -   Reduced Adam Optimizer Learning Rate: A smaller learning rate
+#       (0.0001) is used to prevent the model from overfitting too quickly,
+#       allowing for more stable and generalized learning.
+#   -   Increased EarlyStopping Patience: Patience has been increased from
+#       3 to 5 epochs, giving the model more opportunities to find the optimal
+#       weights before stopping.
+#
 # =============================================================================
 
 # --- Imports ---
@@ -25,26 +24,24 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, Callback
 from sklearn.model_selection import train_test_split
+# --- IMPORT FOR CUSTOM OPTIMIZER ---
+from tensorflow.keras.optimizers import Adam
 
 # --- Configuration ---
 project_root = Path(__file__).parent.parent.parent
 PROCESSED_DATA_DIR = project_root / "data" / "processed"
 MODELS_DIR = project_root / "models"
-
-# --- Model & Training Parameters ---
 EPOCHS = 50
 BATCH_SIZE = 16
 RANDOM_STATE = 42
 
-# --- Custom Callback for Professional Output ---
+# --- Custom Callback for Clean Output ---
 class TrainingProgressCallback(Callback):
-    """A custom callback to print a single, clean line of progress for each epoch."""
     def on_epoch_end(self, epoch, logs=None):
         acc = logs.get('accuracy', 0); val_acc = logs.get('val_accuracy', 0)
         loss = logs.get('loss', 0); val_loss = logs.get('val_loss', 0)
         acc_bar = '█' * int(acc * 20) + '·' * (20 - int(acc * 20))
         val_acc_bar = '█' * int(val_acc * 20) + '·' * (20 - int(val_acc * 20))
-        # Use carriage return `\r` to overwrite the line, and `end=''` to prevent newline
         print(f"\rEpoch {epoch+1:02d}/{EPOCHS} | Loss: {loss:.4f} | Acc: {acc:.2%} [{acc_bar}] | Val_Loss: {val_loss:.4f} | Val_Acc: {val_acc:.2%} [{val_acc_bar}]", end='')
 
 # =============================================================================
@@ -52,18 +49,18 @@ class TrainingProgressCallback(Callback):
 # =============================================================================
 
 if __name__ == "__main__":
-    # --- Step 1: Load Pre-processed Data ---
-    print("--- Step 1: Loading Pre-processed Data ---")
+    # --- Step 1: Load Data ---
+    print("--- Step 1: Loading Pre-processed 16S Data ---")
     X_train = load_npz(PROCESSED_DATA_DIR / "X_train_16s.npz")
     X_test = load_npz(PROCESSED_DATA_DIR / "X_test_16s.npz")
     y_train = np.load(PROCESSED_DATA_DIR / "y_train_16s.npy")
     y_test = np.load(PROCESSED_DATA_DIR / "y_test_16s.npy")
     with open(MODELS_DIR / "16s_genus_label_encoder.pkl", 'rb') as f:
         label_encoder = pickle.load(f)
-    print(f"Loaded {X_train.shape[0]} training samples and {X_test.shape[0]} testing samples.")
+    print(f"  - Loaded {X_train.shape[0]} training samples.")
 
     # --- Step 2: Define and Compile Model ---
-    print("\n--- Step 2: Defining Model Architecture ---")
+    print("\n--- Step 2: Defining 16S Model Architecture ---")
     num_classes = len(label_encoder.classes_)
     input_shape = X_train.shape[1]
     model = Sequential([
@@ -73,24 +70,19 @@ if __name__ == "__main__":
         Dropout(0.5),
         Dense(num_classes, activation='softmax')
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    
+    # --- ACCURACY IMPROVEMENT: Use Adam optimizer with a lower learning rate ---
+    optimizer = Adam(learning_rate=0.0001)
+    
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 
-    # --- Step 3: Final Data Prep and Training ---
+    # --- Step 3: Train Model ---
     print("\n--- Step 3: Preparing Data and Starting Training ---")
-    
-    # Pre-flight check for singletons in the training set
-    unique, counts = np.unique(y_train, return_counts=True)
-    if np.min(counts) < 2:
-        print("WARNING: Singletons found in y_train. This can happen by chance. Cleaning...")
-        non_singleton_indices = np.where(~np.isin(y_train, unique[counts < 2]))[0]
-        X_train = X_train[non_singleton_indices]
-        y_train = y_train[non_singleton_indices]
-
-    # Create validation set
     X_train_final, X_val, y_train_final, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_STATE, stratify=y_train)
     
-    early_stopping = EarlyStopping(monitor='val_accuracy', patience=3, verbose=1, restore_best_weights=True)
+    # --- ACCURACY IMPROVEMENT: Increase patience for EarlyStopping ---
+    early_stopping = EarlyStopping(monitor='val_accuracy', patience=5, verbose=1, restore_best_weights=True)
     
     history = model.fit(
         X_train_final, y_train_final,
@@ -106,7 +98,7 @@ if __name__ == "__main__":
     print("\n--- Step 4: Saving, Reloading, and Evaluating Model ---")
     MODEL_PATH = MODELS_DIR / "16s_genus_classifier.keras"
     model.save(MODEL_PATH)
-    print(f"Model saved to: {MODEL_PATH}")
+    print(f"  - Model saved to: {MODEL_PATH}")
 
     # Clear memory for a clean evaluation environment
     tf.keras.backend.clear_session()
@@ -114,10 +106,14 @@ if __name__ == "__main__":
 
     # Load and evaluate
     loaded_model = load_model(MODEL_PATH)
-    loss, accuracy = loaded_model.evaluate(X_test, y_test, verbose=0)
+    print("  - Evaluating model on the unseen test set...")
+    loss, accuracy = loaded_model.evaluate(X_test, y_test, batch_size=16, verbose=0)
     
-    print("\n--- Final Model Evaluation ---")
-    print(f"Test Set Loss:     {loss:.4f}")
-    print(f"Test Set Accuracy: {accuracy:.2%}")
-    print("----------------------------")
-    print("\n--- 16S PIPELINE COMPLETE ---")
+    print("\n" + "-"*42)
+    print("--- Final 16S Model Evaluation ---")
+    print(f"  - Test Set Loss:     {loss:.4f}")
+    print(f"  - Test Set Accuracy: {accuracy:.2%}")
+    print("-"*42)
+    print("\n" + "="*50)
+    print("         16S PIPELINE SCRIPT COMPLETE")
+    print("="*50)

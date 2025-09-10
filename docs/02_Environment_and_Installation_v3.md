@@ -1,6 +1,6 @@
 # v3 Environment and Installation Guide
 
-This guide provides the official method for setting up the atlas-v3 Conda environment with full GPU support for TensorFlow.
+This guide provides the official method for setting up the atlas Conda environment with full GPU support for TensorFlow.
 
 ## Step 1: Create the Environment from File
 
@@ -19,7 +19,7 @@ After the base environment is created, you must install the specific CUDA Toolki
 Activate the newly created environment:
 
 ```bash
-conda activate atlas-v3
+conda activate atlas
 ```
 
 Install the required libraries from the conda-forge channel:

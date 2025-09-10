@@ -1,0 +1,14 @@
+{
+  "name": "atlas-app",
+  "version": "1.0.0",
+  "description": "AI Taxonomic Learning & Analysis System",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "author": "CMLRE",
+  "license": "MIT",
+  "devDependencies": {
+    "electron": "^25.0.0"
+  }
+}

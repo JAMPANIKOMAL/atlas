@@ -182,7 +182,11 @@ if __name__ == "__main__":
 
     # --- 4. Generate Final Report ---
     print("\n--- Step 4: Generating Final Biodiversity Report ---")
-    FINAL_REPORT_PATH = project_root / f"ATLAS_REPORT_{args.input_fasta.stem}.txt"
+    # --- FIX: Create and use a dedicated reports directory ---
+    REPORTS_DIR = project_root / "reports"
+    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    FINAL_REPORT_PATH = REPORTS_DIR / f"ATLAS_REPORT_{args.input_fasta.stem}.txt"
+    
     with open(FINAL_REPORT_PATH, "w") as f:
         f.write("="*60 + "\n")
         f.write("       ATLAS: AI Taxonomic Learning & Analysis System\n")
@@ -207,4 +211,5 @@ if __name__ == "__main__":
 
     print(f"  - Report saved successfully to: {FINAL_REPORT_PATH}")
     print("\n[SUCCESS] ATLAS analysis complete.")
+
 

@@ -1,8 +1,16 @@
 # =============================================================================
-# ATLAS - 18S PIPELINE - SCRIPT 2: TRAIN MODEL
+# ATLAS - 18S PIPELINE - SCRIPT 2: TRAIN MODEL (IMPROVED ACCURACY)
 # =============================================================================
 # This script trains, evaluates, and saves the 18S neural network classifier.
-# It uses the robust memory-safe workflow developed for the 16S pipeline.
+#
+# ACCURACY IMPROVEMENTS:
+#   -   Reduced Adam Optimizer Learning Rate: A smaller learning rate
+#       (0.0001) is used to prevent the model from overfitting too quickly on
+#       this complex dataset, allowing for more stable learning.
+#   -   Increased EarlyStopping Patience: Patience has been increased from
+#       3 to 5 epochs, giving the model more opportunities to find the optimal
+#       weights before stopping.
+#
 # =============================================================================
 
 # --- Imports ---
@@ -16,6 +24,8 @@ from tensorflow.keras.models import Sequential, load_model
 from tensorflow.keras.layers import Dense, Dropout
 from tensorflow.keras.callbacks import EarlyStopping, Callback
 from sklearn.model_selection import train_test_split
+# --- IMPORT FOR CUSTOM OPTIMIZER ---
+from tensorflow.keras.optimizers import Adam
 
 # --- Configuration ---
 project_root = Path(__file__).parent.parent.parent
@@ -60,13 +70,20 @@ if __name__ == "__main__":
         Dropout(0.5),
         Dense(num_classes, activation='softmax')
     ])
-    model.compile(optimizer='adam', loss='sparse_categorical_crossentropy', metrics=['accuracy'])
+    
+    # --- ACCURACY IMPROVEMENT: Use Adam optimizer with a lower learning rate ---
+    optimizer = Adam(learning_rate=0.0001)
+    
+    model.compile(optimizer=optimizer, loss='sparse_categorical_crossentropy', metrics=['accuracy'])
     model.summary()
 
     # --- Step 3: Train Model ---
     print("\n--- Step 3: Preparing Data and Starting Training ---")
     X_train_final, X_val, y_train_final, y_val = train_test_split(X_train, y_train, test_size=0.1, random_state=RANDOM_STATE, stratify=y_train)
-    early_stopping = EarlyStopping(monitor='val_accuracy', patience=3, verbose=1, restore_best_weights=True)
+    
+    # --- ACCURACY IMPROVEMENT: Increase patience for EarlyStopping ---
+    early_stopping = EarlyStopping(monitor='val_accuracy', patience=5, verbose=1, restore_best_weights=True)
+    
     history = model.fit(
         X_train_final, y_train_final,
         epochs=EPOCHS,
@@ -94,3 +111,4 @@ if __name__ == "__main__":
     print(f"Test Set Accuracy: {accuracy:.2%}")
     print("--------------------------------")
     print("\n--- 18S PIPELINE COMPLETE ---")
+

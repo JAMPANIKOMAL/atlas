@@ -1,10 +1,16 @@
-# v3 Environment and Installation Guide
+# ATLAS Environment and Installation Guide
 
-This guide provides the official method for setting up the atlas Conda environment with full GPU support for TensorFlow.
+This guide provides instructions for setting up a Conda environment to run the ATLAS pipelines. The project supports two distinct workflows: a GPU-accelerated setup for users with compatible NVIDIA hardware, and a CPU-only setup for all other users.
 
-## Step 1: Create the Environment from File
+Please choose the guide that matches your system.
 
-Place the `environment-v3.yml` file in your project's root directory.
+## Option 1: GPU-Accelerated Environment (Recommended for Performance)
+
+This setup is for users with an NVIDIA GPU and provides the fastest performance for model training. The environment is configured to use TensorFlow 2.10, which requires a specific version of the CUDA Toolkit and cuDNN.
+
+### Step 1: Create the Base Environment
+
+You will need the `environment-v3.yml` file located in the project's root directory.
 
 Open a Conda terminal, navigate to the project root, and run the following command:
 
@@ -12,9 +18,11 @@ Open a Conda terminal, navigate to the project root, and run the following comma
 conda env create -f environment-v3.yml
 ```
 
-## Step 2: Install GPU Support Libraries (CUDA & cuDNN)
+This will create an environment named `atlas` with all the necessary Python packages.
 
-After the base environment is created, you must install the specific CUDA Toolkit and cuDNN versions that are compatible with TensorFlow 2.10.
+### Step 2: Install GPU Support Libraries
+
+After the base environment is created, you must install the specific CUDA Toolkit and cuDNN versions.
 
 Activate the newly created environment:
 
@@ -28,20 +36,28 @@ Install the required libraries from the conda-forge channel:
 conda install -c conda-forge cudatoolkit=11.2 cudnn=8.1.0
 ```
 
-## Step 3: Verify the Installation
+### Step 3: Verify the GPU Installation
 
-To confirm that TensorFlow can successfully detect and use your GPU, run the following command from your activated atlas-v3 environment:
+To confirm that TensorFlow can successfully detect and use your GPU, run the following command from your activated atlas environment:
 
 ```bash
 python -c "import tensorflow as tf; print(tf.config.list_physical_devices('GPU'))"
 ```
 
-### Expected Successful Output
+**Expected Successful Output:**
+You should see your GPU listed, for example: `[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]`
 
-You should see your GPU listed, for example:
+If you see this output, your environment is correctly configured for GPU-accelerated training.
 
-```
-[PhysicalDevice(name='/physical_device:GPU:0', device_type='GPU')]
-```
+## Option 2: CPU-Only Environment (Universal Compatibility)
 
-If you see this output, your environment is correctly configured and ready for GPU-accelerated model training.
+conda activate atlas-cpu
+
+To confirm that the environment is working correctly, run the following command:
+
+python -c "import tensorflow as tf; print(f'TensorFlow version {tf.__version__} is installed.')"
+
+Expected Successful Output:
+You should see a message confirming the TensorFlow version, for example: TensorFlow version 2.10.0 is installed.
+
+Your CPU-only environment is now ready.

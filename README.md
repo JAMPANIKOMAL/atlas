@@ -6,7 +6,7 @@ This repository contains the official codebase for the ATLAS project, an AI-driv
 
 The goal of ATLAS is to address a critical challenge in modern biodiversity research: the "database gap." Standard reference databases are often incomplete, especially for organisms from unique biomes like the deep sea. ATLAS is an AI-driven pipeline that minimizes reliance on these databases, reduces computational time, and enables the discovery of novel taxa from raw eDNA reads.
 
-For a detailed overview of the project's scientific background and long-term goals, please see the [Project Overview](docs/project-overview.md) document.
+For a detailed overview of the project's scientific background and long-term goals, please see the [Project Overview](docs/01_Project_Overview.md) document.
 
 ## Getting Started
 
@@ -14,11 +14,11 @@ To get started with ATLAS, you will need to set up a Conda environment and downl
 
 ### 1. Environment Setup
 
-This project supports both GPU-accelerated and CPU-only workflows. Please follow the [Environment and Installation Guide](docs/environment-installation-guide.md) for detailed, step-by-step instructions on setting up the correct environment for your system.
+This project supports both GPU-accelerated and CPU-only workflows. Please follow the [Environment and Installation Guide](docs/02_Environment_and_Installation.md) for detailed, step-by-step instructions on setting up the correct environment for your system.
 
 ### 2. Data Acquisition
 
-The ATLAS pipelines rely on large, public reference databases that are not included in this repository. You must download them manually. The required files are listed in the [Project Status & Strategic Roadmap](docs/project-status-roadmap.md). Place all downloaded files in the `data/raw/` directory.
+The ATLAS pipelines rely on large, public reference databases that are not included in this repository. You must download them manually. The required files are listed in the [16S Pipeline Workflow](docs/03_Pipeline_16S_Workflow.md). Place all downloaded files in the `data/raw/` directory.
 
 ### 3. Running a Pipeline
 

@@ -51,22 +51,34 @@ class TaxonClassifier:
         self.model = None
         self.vectorizer = None
         self.label_encoder = None
-        self._load_artifacts()
+        self.is_loaded = self._load_artifacts()
 
     def _load_artifacts(self):
         """Loads the model, vectorizer, and label encoder from disk."""
         try:
-            self.model = load_model(MODELS_DIR / f"{self.name}_genus_classifier.keras")
-            with open(MODELS_DIR / f"{self.name}_genus_vectorizer.pkl", 'rb') as f:
+            model_path = MODELS_DIR / f"{self.name}_genus_classifier.keras"
+            vectorizer_path = MODELS_DIR / f"{self.name}_genus_vectorizer.pkl"
+            encoder_path = MODELS_DIR / f"{self.name}_genus_label_encoder.pkl"
+            
+            if not model_path.exists():
+                print(f"Warning: Model for {self.name} not found at {model_path}")
+                return False
+            
+            self.model = load_model(model_path)
+            with open(vectorizer_path, 'rb') as f:
                 self.vectorizer = pickle.load(f)
-            with open(MODELS_DIR / f"{self.name}_genus_label_encoder.pkl", 'rb') as f:
+            with open(encoder_path, 'rb') as f:
                 self.label_encoder = pickle.load(f)
-        except FileNotFoundError as e:
-            # Re-raise with a more informative message for the web app
-            raise FileNotFoundError(f"[ERROR] Artifacts for {self.name} model not found. Please ensure all models are trained.") from e
+            return True
+        except Exception as e:
+            print(f"Error loading {self.name} model: {e}")
+            return False
 
     def predict(self, sequence, confidence_threshold=0.8):
         """Predicts the taxon for a single sequence."""
+        if not self.is_loaded:
+            return None, 0.0
+            
         kmer_counts = get_kmer_counts(sequence, self.kmer_size)
         
         if not kmer_counts:
@@ -100,13 +112,23 @@ def run_analysis(input_fasta_path):
     """
     # --- 1. Load All Filter Models ---
     print("--- Step 1: Loading All 'Filter' AI Models ---")
-    classifiers = [
+    potential_classifiers = [
         TaxonClassifier("16s", 6),
         TaxonClassifier("18s", 6),
         TaxonClassifier("coi", 8),
         TaxonClassifier("its", 7)
     ]
-    print("  - All models loaded successfully.")
+    
+    # Only keep successfully loaded classifiers
+    classifiers = [clf for clf in potential_classifiers if clf.is_loaded]
+    
+    if not classifiers:
+        return {"error": "No trained models found. Please ensure models are available."}
+    
+    print(f"  - Successfully loaded {len(classifiers)} models: {[clf.name for clf in classifiers]}")
+    if len(classifiers) < len(potential_classifiers):
+        missing = [clf.name for clf in potential_classifiers if not clf.is_loaded]
+        print(f"  - Warning: Missing models for: {missing}")
 
     # --- 2. Process Input FASTA ---
     print(f"\n--- Step 2: Processing Input File: {Path(input_fasta_path).name} ---")

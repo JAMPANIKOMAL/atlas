@@ -11,9 +11,18 @@ sys.path.append(str(project_root))
 
 from src.predict import run_analysis
 
+# Use the full path for the static and template folders
+web_app_dir = Path(__file__).parent
 app = Flask(__name__,
-            static_folder=str(Path(__file__).parent / "static"),
-            template_folder=str(Path(__file__).parent / "templates"))
+            static_folder=str(web_app_dir / "static"),
+            template_folder=str(web_app_dir / "templates"))
+
+# A new route to handle a specific part of the static file path.
+# This helps Flask find files nested in sub-folders of /static.
+@app.route('/static/<path:filename>')
+def static_files(filename):
+    """Serve files from the static folder."""
+    return send_from_directory(app.static_folder, filename)
 
 @app.route('/')
 def home():
@@ -53,6 +62,8 @@ def analyze_sequence():
         analysis_results = run_analysis(str(temp_fasta_path))
         return jsonify(analysis_results)
     except Exception as e:
+        # Log the error for debugging
+        print(f"Analysis failed with an error: {e}", file=sys.stderr)
         return jsonify({"error": str(e)}), 500
     finally:
         # Clean up the temporary file

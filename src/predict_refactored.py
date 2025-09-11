@@ -21,6 +21,7 @@ from gensim.models.doc2vec import Doc2Vec, TaggedDocument
 from sklearn.preprocessing import normalize
 import Bio.Blast.NCBIWWW as NCBIWWW
 import Bio.Blast.NCBIXML as NCBIXML
+import gc
 
 # --- Configuration ---
 project_root = Path(__file__).parent.parent
@@ -176,45 +177,49 @@ def run_analysis(input_fasta_path):
     # --- 1. Check GPU Status ---
     analysis_log.append(f"GPU Status: {check_gpu_status()}")
 
-    # --- 2. Load All Filter Models ---
-    analysis_log.append("Loading all 'Filter' AI Models...")
+    # --- 2. Load and Run Filter Models Sequentially ---
+    analysis_log.append("Loading and running 'Filter' AI Models...")
+    
+    # The models are now loaded one by one inside the loop
     potential_classifiers = [
-        TaxonClassifier("16s", 6), TaxonClassifier("18s", 6),
-        TaxonClassifier("coi", 8), TaxonClassifier("its", 7)
+        ("16s", 6), ("18s", 6), ("coi", 8), ("its", 7)
     ]
-    classifiers = [clf for clf in potential_classifiers if clf.is_loaded]
-    if not classifiers:
-        return {"status": "error", "message": "No trained models found. Please ensure models are available.", "log": analysis_log}
-    analysis_log.append(f"  - Successfully loaded {len(classifiers)} models: {[clf.name for clf in classifiers]}")
+    
+    classified_results = Counter()
+    unclassified_sequences = []
 
-    # --- 3. Process Input FASTA ---
-    analysis_log.append(f"Processing input file: {Path(input_fasta_path).name}...")
     try:
         input_sequences = list(SeqIO.parse(input_fasta_path, "fasta"))
     except Exception as e:
         return {"status": "error", "message": f"Failed to parse FASTA file: {e}", "log": analysis_log}
-        
-    classified_results = Counter()
-    unclassified_sequences = []
-
-    for seq_record in tqdm(input_sequences, desc="  - Classifying sequences"):
+    
+    for seq_record in tqdm(input_sequences, desc="  - Processing sequences"):
         sequence_str = str(seq_record.seq)
         prediction_made = False
-        for classifier in classifiers:
-            label, prob = classifier.predict(sequence_str)
-            if label:
-                classified_results[label] += 1
-                prediction_made = True
-                break
         
+        # Sequentially load and predict with each model
+        for name, kmer_size in potential_classifiers:
+            model = TaxonClassifier(name, kmer_size)
+            if model.is_loaded:
+                label, prob = model.predict(sequence_str)
+                if label:
+                    classified_results[label] += 1
+                    prediction_made = True
+                    del model  # Explicitly delete the model to free memory
+                    tf.keras.backend.clear_session()
+                    gc.collect()
+                    break # Move to the next sequence
+            else:
+                analysis_log.append(f"Warning: Missing artifacts for {name}. Skipping classifier.")
+                
         if not prediction_made:
             unclassified_sequences.append(seq_record)
-    
+
     analysis_log.append(f"  - Classification complete.")
     analysis_log.append(f"    - Known organisms identified: {sum(classified_results.values())}")
     analysis_log.append(f"    - Unclassified sequences: {len(unclassified_sequences)}")
     
-    # --- 4. Run Explorer Pipeline (if necessary) ---
+    # --- 3. Run Explorer Pipeline (if necessary) ---
     explorer_report_content = "No unclassified sequences to explore."
     if unclassified_sequences:
         analysis_log.append("Starting 'Explorer' AI Pipeline...")
@@ -225,10 +230,9 @@ def run_analysis(input_fasta_path):
         
         analysis_log.append("  - Explorer pipeline complete.")
 
-    # --- 5. Generate Final Report ---
+    # --- 4. Generate Final Report ---
     analysis_log.append("Generating Final Biodiversity Report...")
     
-    # --- FIX: Generate the classified results string safely ---
     sorted_results = sorted(classified_results.items(), key=lambda item: item[1], reverse=True)
     classified_results_str = 'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in sorted_results])
 
@@ -248,7 +252,6 @@ Part 2: Novel Taxa Discovery (Explorer Results)
 {explorer_report_content}
 """
     
-    # Return a structured dictionary for the web app
     return {
         "status": "success",
         "log": analysis_log,

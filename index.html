@@ -23,6 +23,11 @@
             background-color: #2188ff;
             color: #ffffff;
             transition: all 0.2s;
+            width: 200px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
         .pro-button:hover {
             background-color: #186acb;
@@ -53,16 +58,20 @@
             color: #c9d1d9;
             white-space: pre-wrap;
         }
+        .text-input-container {
+            width: 100%;
+            max-width: 600px;
+        }
     </style>
 </head>
 <body class="flex items-center justify-center min-h-screen p-6">
-    <div id="main-container" class="pro-card p-8 rounded-lg shadow-2xl w-full max-w-4xl">
+    <div id="main-container" class="pro-card p-8 rounded-lg shadow-2xl w-full max-w-4xl text-center">
         <div id="input-screen" class="flex flex-col items-center justify-center">
-            <h1 class="text-2xl font-semibold text-gray-100 text-center">ARTIFICIAL TAXONOMIC LEARNING & ANALYSIS SYSTEM</h1>
-            <p class="text-center text-gray-400 text-sm mt-2">ATLAS: eDNA Analysis Pipeline</p>
+            <h1 class="text-2xl font-semibold text-gray-100">ARTIFICIAL TAXONOMIC LEARNING & ANALYSIS SYSTEM</h1>
+            <p class="text-gray-400 text-sm mt-2">ATLAS: eDNA Analysis Pipeline</p>
             
-            <div class="space-y-6 mt-8 w-full max-w-xl">
-                <div>
+            <div class="space-y-6 mt-8 w-full flex flex-col items-center">
+                <div class="text-input-container">
                     <label for="fasta-file-input" class="block text-sm font-medium text-gray-300 mb-2">Upload a FASTA file from your system.</label>
                     <input id="fasta-file-input" type="file" accept=".fasta,.fna,.ffn,.faa,.frn" class="pro-input-file block w-full text-sm text-gray-400
                         file:mr-4 file:py-2 file:px-4
@@ -74,13 +83,13 @@
                         focus:outline-none focus:ring-2 focus:ring-[#2188ff]" />
                 </div>
                 
-                <div class="relative flex items-center justify-center my-6">
+                <div class="relative flex items-center justify-center my-6 text-input-container">
                     <div class="flex-grow border-t border-gray-600"></div>
                     <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
                     <div class="flex-grow border-t border-gray-600"></div>
                 </div>
                 
-                <div>
+                <div class="text-input-container">
                     <label for="dna-sequence-input" class="block text-sm font-medium text-gray-300 mb-2">Paste raw DNA sequence(s) below.</label>
                     <textarea id="dna-sequence-input" rows="6" class="text-input-style block w-full px-4 py-3 rounded-md shadow-inner
                         focus:outline-none focus:ring-2 focus:ring-[#2188ff]
@@ -91,8 +100,8 @@ GATTACA...
 AAGCTT..."></textarea>
                 </div>
     
-                <div class="text-center mt-8">
-                    <button id="run-analysis-btn" class="pro-button w-full px-8 py-3 font-bold text-lg rounded-md shadow-md">
+                <div class="mt-8">
+                    <button id="run-analysis-btn" class="pro-button px-8 py-3 font-bold text-lg rounded-md shadow-md">
                         Run Analysis
                     </button>
                 </div>
@@ -100,21 +109,25 @@ AAGCTT..."></textarea>
         </div>
 
         <div id="loading-screen" class="flex flex-col items-center justify-center text-center hidden p-8">
-            <svg class="animate-spin h-10 w-10 text-[#2188ff] mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
             <div class="mt-8 bg-[#0d1117] p-6 rounded-md w-full text-left">
-                <p class="terminal-text" id="terminal-log">Starting analysis...</p>
+                <div id="terminal-log" class="terminal-text h-64 overflow-y-auto"></div>
+            </div>
+            <div class="mt-6 text-gray-400 text-sm animate-pulse">
+                Analyzing... Please wait, this may take a few minutes.
             </div>
         </div>
 
         <div id="results-screen" class="hidden p-8">
             <div class="flex justify-between items-center mb-6">
                 <h2 class="text-xl font-bold text-gray-100">Analysis Results</h2>
-                <button id="download-report-btn" class="pro-button px-4 py-2 rounded-md font-medium text-sm">
-                    Download Report
-                </button>
+                <div class="flex space-x-4">
+                    <button id="download-report-btn" class="pro-button px-4 py-2 rounded-md font-medium text-sm">
+                        Download Report
+                    </button>
+                    <button id="new-analysis-btn" class="pro-button px-6 py-2 font-medium text-sm rounded-md shadow-md">
+                        Start a New Analysis
+                    </button>
+                </div>
             </div>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -126,35 +139,29 @@ AAGCTT..."></textarea>
                     <h3 class="text-lg font-medium text-gray-100 mb-2">Proportional Composition</h3>
                     <canvas id="pieChart" class="w-full h-64"></canvas>
                 </div>
-            </div>
-            <div class="p-4 pro-card rounded-md shadow-inner">
-                <h3 class="text-lg font-medium text-gray-100 mb-2">Detailed Breakdown</h3>
-                <canvas id="doughnutChart" class="w-full h-64"></canvas>
+                <div class="md:col-span-2 p-4 pro-card rounded-md shadow-inner">
+                    <h3 class="text-lg font-medium text-gray-100 mb-2">Taxonomic Breakdown</h3>
+                    <canvas id="doughnutChart" class="w-full h-64"></canvas>
+                </div>
             </div>
 
             <div class="p-6 pro-card rounded-md shadow-inner mt-6">
                 <div class="flex justify-between items-center mb-4">
                     <h3 class="text-lg font-medium text-gray-100">Full Report Output</h3>
-                    <button id="copy-report-btn" class="text-gray-400 hover:text-gray-100 transition-colors duration-200">
+                    <button id="copy-report-btn" class="pro-button px-4 py-2 rounded-md font-medium text-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                             <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
                             <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
                         </svg>
                     </button>
                 </div>
-                <div id="results-content" class="text-gray-300 whitespace-pre-wrap text-sm terminal-text bg-[#0d1117] p-4 rounded-md"></div>
-            </div>
-
-            <div class="text-center mt-6">
-                <button id="new-analysis-btn" class="pro-button px-6 py-2 font-medium text-sm rounded-md shadow-md">
-                    Start a New Analysis
-                </button>
+                <div id="results-content" class="text-gray-300 text-sm terminal-text bg-[#0d1117] p-4 rounded-md overflow-x-auto"></div>
             </div>
         </div>
         
         <div id="error-message" class="mt-8 p-4 bg-red-800 text-red-200 rounded-md shadow-inner hidden">
             <h3 class="font-bold">Error</h3>
-            <p id="error-text" class="mt-1"></p>
+            <p id="error-text" class="mt-1 text-sm"></p>
         </div>
     </div>
 
@@ -176,15 +183,15 @@ AAGCTT..."></textarea>
         let barChartInstance, pieChartInstance, doughnutChartInstance;
 
         const updateTerminalLog = (message) => {
-            terminalLog.textContent += `\n> ${message}`;
-            loadingScreen.scrollTop = loadingScreen.scrollHeight; // Auto-scroll
+            terminalLog.innerHTML += `<span class="text-blue-400">> </span>${message}<br>`;
+            terminalLog.scrollTop = terminalLog.scrollHeight; // Auto-scroll
         };
 
         const showInputScreen = () => {
             inputScreen.classList.remove('hidden');
             loadingScreen.classList.add('hidden');
             resultsScreen.classList.add('hidden');
-            terminalLog.textContent = 'Starting analysis...'; // Reset log
+            terminalLog.innerHTML = `<span class="text-blue-400">> </span>Starting analysis...<br>`; // Reset log
         };
 
         const showLoadingScreen = () => {
@@ -208,6 +215,16 @@ AAGCTT..."></textarea>
             const sortedLabels = sortedData.map(item => item.label);
             const sortedValues = sortedData.map(item => item.value);
             
+            const getChartColors = (count) => {
+                const colors = [
+                    '#2188ff', '#186acb', '#134e6b', '#a3e635', '#0f766e',
+                    '#0e7490', '#3b82f6', '#34d399', '#f97316', '#ef4444',
+                    '#6b21a8', '#db2777', '#f472b6', '#fb7185', '#be123c',
+                    '#c084fc', '#9333ea', '#581c87', '#d946ef', '#f43f5e'
+                ];
+                return colors.slice(0, count);
+            }
+
             // Bar Chart
             const barCtx = document.getElementById('barChart').getContext('2d');
             if (barChartInstance) barChartInstance.destroy();
@@ -218,7 +235,7 @@ AAGCTT..."></textarea>
                     datasets: [{
                         label: 'Sequence Count',
                         data: sortedValues,
-                        backgroundColor: '#2188ff',
+                        backgroundColor: getChartColors(sortedLabels.length),
                     }]
                 },
                 options: {
@@ -250,10 +267,7 @@ AAGCTT..."></textarea>
                     labels: labels,
                     datasets: [{
                         data: values,
-                        backgroundColor: [
-                            '#2188ff', '#186acb', '#134e6b', '#a3e635', '#0f766e',
-                            '#0e7490', '#3b82f6', '#34d399', '#f97316', '#ef4444'
-                        ],
+                        backgroundColor: getChartColors(labels.length),
                     }]
                 },
                 options: {
@@ -282,10 +296,7 @@ AAGCTT..."></textarea>
                     labels: labels,
                     datasets: [{
                         data: values,
-                        backgroundColor: [
-                            '#2188ff', '#186acb', '#134e6b', '#a3e635', '#0f766e',
-                            '#0e7490', '#3b82f6', '#34d399', '#f97316', '#ef4444'
-                        ],
+                        backgroundColor: getChartColors(labels.length),
                     }]
                 },
                 options: {
@@ -318,7 +329,6 @@ AAGCTT..."></textarea>
 
             showLoadingScreen();
             runButton.disabled = true;
-            updateTerminalLog("Starting ATLAS analysis...");
 
             const formData = new FormData();
             if (file) {
@@ -328,7 +338,6 @@ AAGCTT..."></textarea>
             }
 
             try {
-                // The JS now simulates the progress log based on a structured response
                 const response = await fetch('/run_analysis', {
                     method: 'POST',
                     body: formData,
@@ -337,7 +346,6 @@ AAGCTT..."></textarea>
                 const result = await response.json();
                 
                 if (response.ok && result.status === 'success') {
-                    // Update the terminal log with the steps from the backend
                     result.log.forEach(step => updateTerminalLog(step));
 
                     resultsContent.textContent = result.report_content;

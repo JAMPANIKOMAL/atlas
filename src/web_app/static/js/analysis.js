@@ -106,22 +106,13 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         // Show a loading screen or progress indicator
-        const analysisSection = document.getElementById('analysisProgress');
-        if (analysisSection) {
-            // Placeholder for real progress updates
-            let progress = 0;
-            const progressInterval = setInterval(() => {
-                progress += Math.floor(Math.random() * 10) + 1; // Simulate progress
-                if (progress >= 100) {
-                    progress = 99;
-                    clearInterval(progressInterval);
-                }
-                document.getElementById('processingProgress').textContent = `${progress}%`;
-            }, 500);
-
+        const uploadSection = document.getElementById('uploadSection');
+        const analysisProgressSection = document.getElementById('analysisProgress');
+        
+        if (uploadSection && analysisProgressSection) {
             // Hide the upload section and show the progress section
-            document.querySelector('section').classList.add('hidden');
-            analysisSection.classList.remove('hidden');
+            uploadSection.classList.add('hidden');
+            analysisProgressSection.classList.remove('hidden');
 
             try {
                 const response = await fetch('/api/analyze', {
@@ -130,15 +121,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ sequences: sequences })
                 });
 
-                clearInterval(progressInterval);
-                document.getElementById('processingProgress').textContent = '100%';
-
                 const result = await response.json();
                 
                 if (response.ok) {
-                    // Redirect to the report page or display results inline
-                    console.log('Analysis successful:', result);
-                    alert('Analysis complete! Check the report file for results.');
+                    // Display a success message or trigger a download
+                    alert('Analysis complete! Your report is being downloaded.');
                     
                     // Trigger download of the report
                     if (result.report_path) {
@@ -152,16 +139,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     console.error('Analysis failed:', result.error);
                     alert(`Analysis failed: ${result.error}`);
                     // Hide progress and show upload section again
-                    analysisSection.classList.add('hidden');
-                    document.querySelector('section').classList.remove('hidden');
+                    analysisProgressSection.classList.add('hidden');
+                    uploadSection.classList.remove('hidden');
                 }
             } catch (error) {
-                clearInterval(progressInterval);
                 console.error('Network or server error:', error);
                 alert(`A network or server error occurred: ${error}`);
                 // Hide progress and show upload section again
-                analysisSection.classList.add('hidden');
-                document.querySelector('section').classList.remove('hidden');
+                analysisProgressSection.classList.add('hidden');
+                uploadSection.classList.remove('hidden');
             }
         }
     });

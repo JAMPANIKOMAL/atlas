@@ -74,7 +74,7 @@
         </section>
 
         <!-- Upload Section -->
-        <section class="py-16">
+        <section id="uploadSection" class="py-16">
             <div class="container mx-auto px-6">
                 <div class="max-w-6xl mx-auto">
                     <div class="bg-white rounded-3xl shadow-xl p-8 mb-12" data-aos="fade-up" data-aos-duration="600">
@@ -197,94 +197,102 @@
                     </div>
 
                     <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-                        <!-- Model 1: Species Classifier -->
+                        <!-- Model 1: 16S Bacteria -->
                         <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="100">
                             <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6">
-                                <i class="fas fa-microscope text-white text-2xl"></i>
+                                <i class="fas fa-bacteria text-white text-2xl"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-dark mb-3">Species Classifier</h3>
-                            <p class="text-gray-600 mb-4">Advanced neural network trained on 2.4M sequences for precise species identification with 99.2% accuracy.</p>
+                            <h3 class="text-xl font-bold text-dark mb-3">16S Bacteria Classifier</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our primary model for prokaryotic identification, trained on the 16S rRNA gene. Essential for microbial diversity.
+                            </p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Training Data:</span>
-                                    <span class="font-semibold">2.4M sequences</span>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-semibold text-green-600">Complete</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Accuracy:</span>
-                                    <span class="font-semibold text-green-600">99.2%</span>
+                                    <span class="font-semibold">88.95%</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Species Coverage:</span>
-                                    <span class="font-semibold">45,000+</span>
+                                    <span class="text-gray-500">Classes:</span>
+                                    <span class="font-semibold">345 genera</span>
                                 </div>
                             </div>
                         </div>
-
-                        <!-- Model 2: Ecosystem Mapper -->
+                        
+                        <!-- Model 2: 18S Eukaryotes -->
                         <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="200">
                             <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6">
-                                <i class="fas fa-globe-americas text-white text-2xl"></i>
+                                <i class="fas fa-leaf text-white text-2xl"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-dark mb-3">Ecosystem Mapper</h3>
-                            <p class="text-gray-600 mb-4">Specialized model for mapping biodiversity patterns and ecosystem health assessment across different habitats.</p>
+                            <h3 class="text-xl font-bold text-dark mb-3">18S Eukaryote Classifier</h3>
+                            <p class="text-gray-600 mb-4">
+                                A specialized model for eukaryotic life, trained on the 18S rRNA gene. Key for protist and plankton analysis.
+                            </p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Ecosystems:</span>
-                                    <span class="font-semibold">156 types</span>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-semibold text-green-600">Complete</span>
                                 </div>
                                 <div class="flex justify-between">
                                     <span class="text-gray-500">Accuracy:</span>
-                                    <span class="font-semibold text-green-600">97.8%</span>
+                                    <span class="font-semibold">64.09%</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Regions:</span>
-                                    <span class="font-semibold">Global</span>
+                                    <span class="text-gray-500">Classes:</span>
+                                    <span class="font-semibold">616 genera</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Model 3: Invasive Species Detector -->
+                        <!-- Model 3: COI Animalia -->
                         <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="300">
                             <div class="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl flex items-center justify-center mb-6">
-                                <i class="fas fa-exclamation-triangle text-white text-2xl"></i>
+                                <i class="fas fa-fish text-white text-2xl"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-dark mb-3">Invasive Species Detector</h3>
-                            <p class="text-gray-600 mb-4">Early warning system for detecting invasive species and assessing their potential ecological impact.</p>
+                            <h3 class="text-xl font-bold text-dark mb-3">COI Animal Classifier</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our most accurate model, trained on the Cytochrome c oxidase I (COI) gene for robust animal identification.
+                            </p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Invasive Species:</span>
-                                    <span class="font-semibold">12,000+</span>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-semibold text-green-600">Complete</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Detection Rate:</span>
-                                    <span class="font-semibold text-green-600">98.5%</span>
+                                    <span class="text-gray-500">Accuracy:</span>
+                                    <span class="font-semibold">96.87%</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Response Time:</span>
-                                    <span class="font-semibold">< 2 min</span>
+                                    <span class="text-gray-500">Classes:</span>
+                                    <span class="font-semibold">111 genera</span>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Model 4: Temporal Monitor -->
+                        <!-- Model 4: ITS Fungi -->
                         <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2" data-aos="fade-up" data-aos-delay="400">
                             <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-violet-600 rounded-xl flex items-center justify-center mb-6">
-                                <i class="fas fa-clock text-white text-2xl"></i>
+                                <i class="fas fa-fungus text-white text-2xl"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-dark mb-3">Temporal Monitor</h3>
-                            <p class="text-gray-600 mb-4">Time-series analysis model for tracking biodiversity changes and predicting ecosystem trends over time.</p>
+                            <h3 class="text-xl font-bold text-dark mb-3">ITS Fungi Classifier</h3>
+                            <p class="text-gray-600 mb-4">
+                                The model for fungal species, trained on the Internal Transcribed Spacer (ITS) region. Critical for soil and water analysis.
+                            </p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Time Range:</span>
-                                    <span class="font-semibold">20+ years</span>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-semibold text-green-600">Complete</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Prediction Accuracy:</span>
-                                    <span class="font-semibold text-green-600">94.7%</span>
+                                    <span class="text-gray-500">Accuracy:</span>
+                                    <span class="font-semibold">62.19%</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Trend Analysis:</span>
-                                    <span class="font-semibold">Real-time</span>
+                                    <span class="text-gray-500">Classes:</span>
+                                    <span class="font-semibold">634 genera</span>
                                 </div>
                             </div>
                         </div>
@@ -294,44 +302,23 @@
                             <div class="w-16 h-16 bg-gradient-to-r from-cyan-500 to-teal-600 rounded-xl flex items-center justify-center mb-6">
                                 <i class="fas fa-search text-white text-2xl"></i>
                             </div>
-                            <h3 class="text-xl font-bold text-dark mb-3">Novel Species Discoverer</h3>
-                            <p class="text-gray-600 mb-4">Cutting-edge model for identifying potentially new species and unknown genetic variants in environmental samples.</p>
+                            <h3 class="text-xl font-bold text-dark mb-3">Explorer (Unsupervised)</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our cutting-edge pipeline for discovering potentially new species from sequences that do not match existing models.
+                            </p>
                             <div class="space-y-2 text-sm">
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Discoveries:</span>
-                                    <span class="font-semibold">1,847 species</span>
+                                    <span class="text-gray-500">Status:</span>
+                                    <span class="font-semibold text-yellow-600">In Development</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Confidence:</span>
-                                    <span class="font-semibold text-green-600">96.3%</span>
+                                    <span class="text-gray-500">Method:</span>
+                                    <span class="font-semibold">Doc2Vec + HDBSCAN</span>
                                 </div>
                                 <div class="flex justify-between">
-                                    <span class="text-gray-500">Novel Variants:</span>
-                                    <span class="font-semibold">25,000+</span>
+                                    <span class="text-gray-500">Function:</span>
+                                    <span class="font-semibold">Novel taxa discovery</span>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Model Performance Summary -->
-                    <div class="mt-16 bg-gradient-to-r from-primary/5 to-accent/5 rounded-2xl p-8" data-aos="fade-up" data-aos-delay="600">
-                        <h3 class="text-2xl font-bold text-dark mb-6 text-center font-rejouice">Combined Model Performance</h3>
-                        <div class="grid md:grid-cols-4 gap-6 text-center">
-                            <div>
-                                <div class="text-3xl font-bold text-primary mb-2">99.2%</div>
-                                <div class="text-gray-600">Overall Accuracy</div>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-bold text-primary mb-2">< 30s</div>
-                                <div class="text-gray-600">Analysis Time</div>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-bold text-primary mb-2">50K+</div>
-                                <div class="text-gray-600">Species Database</div>
-                            </div>
-                            <div>
-                                <div class="text-3xl font-bold text-primary mb-2">24/7</div>
-                                <div class="text-gray-600">Availability</div>
                             </div>
                         </div>
                     </div>

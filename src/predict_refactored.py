@@ -227,6 +227,11 @@ def run_analysis(input_fasta_path):
 
     # --- 5. Generate Final Report ---
     analysis_log.append("Generating Final Biodiversity Report...")
+    
+    # --- FIX: Generate the classified results string safely ---
+    sorted_results = sorted(classified_results.items(), key=lambda item: item[1], reverse=True)
+    classified_results_str = 'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in sorted_results])
+
     final_report_text = f"""
 GPU Status: {check_gpu_status()}
 Input File: {Path(input_fasta_path).name}
@@ -235,7 +240,7 @@ Total Sequences Analyzed: {len(input_sequences)}
 --------------------------------------
 Part 1: Known Organisms (Filter Results)
 --------------------------------------
-{'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in classified_results.items()])}
+{classified_results_str}
 
 --------------------------------------
 Part 2: Novel Taxa Discovery (Explorer Results)

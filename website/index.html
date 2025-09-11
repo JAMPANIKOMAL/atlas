@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATLAS - Artificial Taxonomic Learning & Analysis System</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="../assets/image/favicon.png">
+    
+    <!-- Custom Fonts are local and will need to be moved to the website/assets/font/ directory -->
+    <style>
+        @font-face {
+            font-family: 'Rejouice-Headline';
+            src: url('../assets/font/Rejouice-Headline.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'NB-BOO';
+            src: url('../assets/font/NB_BOO.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        .font-display {
+            font-family: 'Rejouice-Headline', 'Inter', 'sans-serif';
+        }
+        .font-accent {
+            font-family: 'NB-BOO', 'Inter', 'sans-serif';
+        }
+        .text-gradient {
+            background-image: linear-gradient(to right, #0f766e, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+    </style>
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0f766e',
+                        accent: '#06b6d4',
+                        dark: '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-inter text-gray-900 leading-relaxed antialiased">
+    <!-- Skip Links for Accessibility -->
+    <a href="#main-content" class="skip-link sr-only focus:not-sr-only">Skip to main content</a>
+    <a href="#navigation" class="skip-link sr-only focus:not-sr-only">Skip to navigation</a>
+    
+    <!-- Loading Screen -->
+    <div id="loading-screen" class="fixed inset-0 bg-white z-50 flex items-center justify-center transition-opacity duration-500 ease-out">
+        <div class="text-center">
+            <div class="w-16 h-16 bg-gradient-to-r from-primary to-accent rounded-full flex items-center justify-center mb-4 mx-auto animate-pulse">
+                <i class="fas fa-dna text-white text-2xl"></i>
+            </div>
+            <div class="text-2xl font-bold text-dark mb-2 font-accent">ATLAS</div>
+            <div class="text-gray-600">Initializing AI pipelines...</div>
+            <div class="mt-4 w-48 h-1 bg-gray-200 rounded-full overflow-hidden">
+                <div class="h-full bg-gradient-to-r from-primary to-accent rounded-full animate-progress-bar" style="width: 100%;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-200">
+        <nav id="navigation" class="container mx-auto px-6 py-4" role="navigation" aria-label="Main navigation">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dna text-white text-lg"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-dark font-accent">ATLAS</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="#home" class="nav-link text-gray-700 hover:text-accent transition-colors duration-300 pb-1">Home</a>
+                    <a href="#mission" class="nav-link text-gray-700 hover:text-accent transition-colors duration-300 pb-1">Mission</a>
+                    <a href="#pipelines" class="nav-link text-gray-700 hover:text-accent transition-colors duration-300 pb-1">Pipelines</a>
+                    <a href="#features" class="nav-link text-gray-700 hover:text-accent transition-colors duration-300 pb-1">Features</a>
+                    <a href="#contact" class="nav-link text-gray-700 hover:text-accent transition-colors duration-300 pb-1">Contact</a>
+                </div>
+                <button class="md:hidden text-gray-700" id="mobile-menu-btn" aria-label="Open main menu">
+                    <i class="fas fa-bars text-xl"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section id="home" class="min-h-screen flex items-center relative overflow-hidden">
+            <video autoplay muted loop playsinline preload="metadata" class="absolute inset-0 w-full h-full object-cover z-0">
+                <source src="https://assets.mixkit.co/videos/preview/mixkit-scientist-looking-at-a-dna-strand-43403-large.mp4" type="video/mp4">
+                <img src="../assets/image/mainfirst.jpg" alt="A team of scientists in a lab analyzing DNA data on holographic screens." class="w-full h-full object-cover">
+            </video>
+            <div class="absolute inset-0 bg-black/40 z-10"></div>
+            <div class="container mx-auto px-6 relative z-20">
+                <div class="max-w-4xl mx-auto text-center text-white">
+                    <h1 class="text-5xl md:text-7xl font-bold mb-6 fade-in font-display">
+                        AI-Driven                         <span class="text-accent">Biodiversity Insights</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 opacity-90 fade-in">
+                        ATLAS is an AI-driven pipeline for taxonomic identification and discovery from environmental DNA (eDNA), reducing the "database gap" in biodiversity research.
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center fade-in">
+                        <a href="analysis.html" class="bg-accent text-white px-8 py-4 rounded-lg font-semibold text-lg hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 inline-block text-center font-accent">
+                            Start Analysis
+                        </a>
+                    </div>
+                </div>
+            </div>
+            <div class="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-white animate-bounce">
+                <i class="fas fa-chevron-down text-2xl"></i>
+            </div>
+        </section>
+
+        <!-- Mission Section -->
+        <section id="mission" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="max-w-6xl mx-auto">
+                    <div class="grid md:grid-cols-2 gap-12 items-center">
+                        <div data-aos="fade-right" data-aos-duration="800">
+                            <h2 class="text-4xl md:text-5xl font-bold text-dark mb-6 font-display">Our Core <span class="text-gradient">Mission</span></h2>
+                            <p class="text-lg text-gray-600 mb-6" data-aos="fade-up" data-aos-delay="200">
+                                The ATLAS project addresses a critical challenge in modern biodiversity research: the "database gap." Standard reference databases are often incomplete, hindering the identification of many organisms.
+                            </p>
+                            <p class="text-lg text-gray-600 mb-8" data-aos="fade-up" data-aos-delay="300">
+                                Our AI-driven pipeline minimizes reliance on these databases, reduces computational time, and uniquely enables the discovery of novel taxa from raw eDNA reads.
+                            </p>
+                            <a href="../docs/01_Project_Overview.md" class="bg-primary text-white px-8 py-4 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 inline-block text-center font-accent">
+                                Read Project Overview
+                            </a>
+                        </div>
+                        <div data-aos="fade-left" data-aos-duration="800" data-aos-delay="200">
+                            <img src="../assets/image/mainfirst.jpg" alt="A team of scientists in a lab analyzing DNA data on holographic screens." class="rounded-2xl shadow-2xl floating-image">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Pipelines Section -->
+        <section id="pipelines" class="py-20 bg-gray-50">
+            <div class="container mx-auto px-6">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-16" data-aos="fade-up">
+                        <h2 class="text-4xl md:text-5xl font-bold text-dark mb-6 font-display">Our AI <span class="text-gradient">Pipelines</span></h2>
+                        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                            The ATLAS system is built on specialized pipelines for different genetic markers.
+                        </p>
+                    </div>
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- 16S Pipeline -->
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 card-hover" data-aos="fade-up" data-aos-delay="100">
+                            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-bacteria text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">16S Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our robust pipeline for identifying Bacteria and Archaea, utilizing the well-established 16S rRNA marker.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Prokaryotes</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">88.95%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">Robust K-mer size of 6</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- 18S Pipeline -->
+                        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 card-hover" data-aos="fade-up" data-aos-delay="200">
+                            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-leaf text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">18S Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                A specialized pipeline for identifying Eukaryotic organisms, with a unique parser to handle complex taxonomic strings.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Eukaryotes</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">64.09%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">Advanced taxonomy parser</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COI Pipeline -->
+                        <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 card-hover" data-aos="fade-up" data-aos-delay="300">
+                            <div class="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-fish text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">COI Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our most accurate pipeline, focused on identifying animal species using the Cytochrome Oxidase I gene.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Animalia</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">96.87%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">Robust BOLD data parsing</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ITS Pipeline -->
+                        <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 card-hover" data-aos="fade-up" data-aos-delay="400">
+                            <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-violet-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-fungus text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">ITS Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                A pipeline designed for the complex and variable fungal kingdom, using the ITS region for identification.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Fungi</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">62.19%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">UNITE database parser</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Explorer Pipeline -->
+                        <div class="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-6 border border-cyan-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 md:col-span-2 lg:col-span-1 card-hover" data-aos="fade-up" data-aos-delay="500">
+                            <div class="w-16 h-16 bg-gradient-to-r from-cyan-500 to-teal-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-search text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">Explorer Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our cutting-edge unsupervised learning pipeline that discovers novel taxa and unknown genetic variants in environmental samples.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Methodology:</span>
+                                    <span class="font-semibold">Doc2Vec & HDBSCAN</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Mission:</span>
+                                    <span class="font-semibold">Overcoming the "database gap"</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Discovery:</span>
+                                    <span class="font-semibold">Clustering novel taxa</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section id="features" class="py-20 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="text-center mb-16" data-aos="fade-up">
+                    <h2 class="text-4xl md:text-5xl font-bold text-dark mb-6 font-display">How it <span class="text-gradient">Works</span></h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                        Follow our revolutionary journey from environmental samples to actionable biodiversity insights
+                    </p>
+                </div>
+                
+                <div class="relative max-w-5xl mx-auto">
+                    <!-- Vertical Timeline Line -->
+                    <div class="absolute left-1/2 -translate-x-1/2 w-1 bg-gray-300 h-full z-0 hidden md:block"></div>
+                    
+                    <!-- Timeline Steps Container -->
+                    <div class="relative z-10 space-y-24">
+                        <!-- Step 1 -->
+                        <div class="flex items-center md:flex-row-reverse">
+                            <div class="w-full md:w-1/2 md:pl-16">
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105" data-aos="fade-left">
+                                    <div class="flex items-center mb-4 space-x-4">
+                                        <div class="flex-shrink-0 w-12 h-12 bg-primary rounded-full text-white flex items-center justify-center">
+                                            <i class="fas fa-flask text-xl"></i>
+                                        </div>
+                                        <h3 class="text-2xl font-semibold text-dark font-accent">Sample Collection</h3>
+                                    </div>
+                                    <p class="text-gray-600">
+                                        We begin by collecting environmental DNA (eDNA) from water, soil, or air samples using standardized field protocols that ensure sample integrity.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="hidden md:block absolute w-8 h-8 bg-white border-4 border-primary rounded-full left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                        </div>
+                        
+                        <!-- Step 2 -->
+                        <div class="flex items-center">
+                            <div class="w-full md:w-1/2 md:pr-16">
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105" data-aos="fade-right">
+                                    <div class="flex items-center mb-4 space-x-4">
+                                        <div class="flex-shrink-0 w-12 h-12 bg-accent rounded-full text-white flex items-center justify-center">
+                                            <i class="fas fa-dna text-xl"></i>
+                                        </div>
+                                        <h3 class="text-2xl font-semibold text-dark font-accent">DNA Sequencing & Barcoding</h3>
+                                    </div>
+                                    <p class="text-gray-600">
+                                        In the lab, we extract the eDNA and amplify key genetic barcode regions using next-generation sequencing technology.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="hidden md:block absolute w-8 h-8 bg-white border-4 border-accent rounded-full left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                        </div>
+                        
+                        <!-- Step 3 -->
+                        <div class="flex items-center md:flex-row-reverse">
+                            <div class="w-full md:w-1/2 md:pl-16">
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105" data-aos="fade-left">
+                                    <div class="flex items-center mb-4 space-x-4">
+                                        <div class="flex-shrink-0 w-12 h-12 bg-purple-500 rounded-full text-white flex items-center justify-center">
+                                            <i class="fas fa-brain text-xl"></i>
+                                        </div>
+                                        <h3 class="text-2xl font-semibold text-dark font-accent">AI Analysis with ATLAS</h3>
+                                    </div>
+                                    <p class="text-gray-600">
+                                        Our proprietary ATLAS AI platform transforms raw sequence data into accurate classifications using deep learning models trained on genetic "fingerprints."
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="hidden md:block absolute w-8 h-8 bg-white border-4 border-purple-500 rounded-full left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                        </div>
+                        
+                        <!-- Step 4 -->
+                        <div class="flex items-center">
+                            <div class="w-full md:w-1/2 md:pr-16">
+                                <div class="bg-white rounded-xl shadow-lg p-6 hover:shadow-2xl transition-all duration-300 transform hover:scale-105" data-aos="fade-right">
+                                    <div class="flex items-center mb-4 space-x-4">
+                                        <div class="flex-shrink-0 w-12 h-12 bg-emerald-500 rounded-full text-white flex items-center justify-center">
+                                            <i class="fas fa-chart-line text-xl"></i>
+                                        </div>
+                                        <h3 class="text-2xl font-semibold text-dark font-accent">Data Visualization & Reports</h3>
+                                    </div>
+                                    <p class="text-gray-600">
+                                        AI-driven classifications are synthesized into interactive dashboards and comprehensive biodiversity reports for actionable insights.
+                                    </p>
+                                </div>
+                            </div>
+                            <div class="hidden md:block absolute w-8 h-8 bg-white border-4 border-emerald-500 rounded-full left-1/2 transform -translate-x-1/2 -translate-y-1/2"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Contact Section -->
+        <section id="contact" class="py-32 bg-white relative">
+            <div class="container mx-auto px-6">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-20" data-aos="fade-up">
+                        <h2 class="text-5xl md:text-7xl font-bold text-dark mb-8 font-display leading-tight">
+                            Ready to transform your <span class="text-primary">research?</span>
+                        </h2>
+                        <p class="text-xl text-gray-600 max-w-2xl mx-auto leading-relaxed">
+                            Let's create something extraordinary together.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dna text-white text-xl"></i>
+                    </div>
+                    <span class="text-3xl font-bold font-accent">ATLAS</span>
+                </div>
+        
+                <div class="text-gray-500 text-sm">
+                    © 2025 ATLAS. All rights reserved. Team Diggaj
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="../js/script.js"></script>
+    <script>
+        window.addEventListener('load', function() {
+            const loadingScreen = document.getElementById('loading-screen');
+            if (loadingScreen) {
+                loadingScreen.classList.add('opacity-0');
+                setTimeout(() => {
+                    loadingScreen.style.visibility = 'hidden';
+                }, 500);
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            AOS.init({
+                duration: 800,
+                easing: 'ease-in-out',
+                once: true,
+                offset: 100,
+                delay: 0
+            });
+        });
+        
+        // Active navigation highlighting
+        const sections = document.querySelectorAll('section[id]');
+        const navLinks = document.querySelectorAll('.nav-link');
+        const observerOptions = {
+            root: null,
+            rootMargin: '-50% 0px -50% 0px',
+            threshold: 0
+        };
+
+        const navObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const currentSection = entry.target.getAttribute('id');
+                    navLinks.forEach(link => {
+                        link.classList.remove('text-accent', 'border-b-2', 'border-accent');
+                        if (link.getAttribute('href') === `#${currentSection}`) {
+                            link.classList.add('text-accent', 'border-b-2', 'border-accent');
+                        }
+                    });
+                }
+            });
+        }, observerOptions);
+
+        sections.forEach(section => {
+            navObserver.observe(section);
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const homeLink = document.querySelector('a[href="#home"]');
+            if (homeLink) {
+                homeLink.classList.add('text-accent', 'border-b-2', 'border-accent');
+            }
+        });
+        
+    </script>
+</body>
+</html>

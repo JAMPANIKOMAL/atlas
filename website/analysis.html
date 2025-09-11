@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATLAS Analysis - Environmental DNA Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="icon" type="image/png" href="../assets/image/favicon.png">
+    
+    <!-- Custom Fonts are local and will need to be moved to the website/assets/font/ directory -->
+    <style>
+        @font-face {
+            font-family: 'Rejouice-Headline';
+            src: url('../assets/font/Rejouice-Headline.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        @font-face {
+            font-family: 'NB-BOO';
+            src: url('../assets/font/NB_BOO.ttf') format('truetype');
+            font-weight: normal;
+            font-style: normal;
+            font-display: swap;
+        }
+        .font-display {
+            font-family: 'Rejouice-Headline', 'Inter', 'sans-serif';
+        }
+        .font-accent {
+            font-family: 'NB-BOO', 'Inter', 'sans-serif';
+        }
+        .text-gradient {
+            background-image: linear-gradient(to right, #0f766e, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+        }
+        
+        /* Loading Screen and Animations */
+        @keyframes progress-bar {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        .animate-progress-bar {
+            animation: progress-bar 2s linear infinite;
+        }
+        .loading-spinner {
+            border: 3px solid rgba(15, 118, 110, 0.1);
+            border-top: 3px solid #0f766e;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        .interactive-card {
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .interactive-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 20px 40px rgba(15, 118, 110, 0.2);
+        }
+    </style>
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'inter': ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        primary: '#0f766e',
+                        accent: '#06b6d4',
+                        dark: '#1f2937',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-gray-50 font-inter text-gray-900 leading-relaxed antialiased">
+    <!-- Skip Links for Accessibility -->
+    <a href="#main-content" class="skip-link sr-only focus:not-sr-only">Skip to main content</a>
+    <a href="#navigation" class="skip-link sr-only focus:not-sr-only">Skip to navigation</a>
+    
+    <!-- Header -->
+    <header class="fixed top-0 w-full bg-white/95 backdrop-blur-sm z-50 border-b border-gray-200">
+        <nav id="navigation" class="container mx-auto px-6 py-4" role="navigation" aria-label="Main navigation">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dna text-white text-lg"></i>
+                    </div>
+                    <span class="text-2xl font-bold text-dark font-accent">ATLAS</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <a href="index.html" class="text-gray-700 hover:text-accent transition-colors duration-300 flex items-center">
+                        <i class="fas fa-arrow-left mr-2"></i>
+                        Back to Home
+                    </a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main id="main-content">
+        <!-- Hero Section -->
+        <section class="pt-20 pb-16 bg-gradient-to-br from-primary/5 to-accent/5">
+            <div class="container mx-auto px-6">
+                <div class="max-w-4xl mx-auto text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold text-dark mb-6 font-display" data-aos="fade-up" data-aos-duration="800">
+                        DNA Analysis <span class="text-gradient">Platform</span>
+                    </h1>
+                    <p class="text-xl text-gray-600 mb-8" data-aos="fade-up" data-aos-delay="200">
+                        Upload your FASTA files or paste sequences to analyze environmental DNA with our advanced AI pipelines.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Upload Section -->
+        <section class="py-16">
+            <div class="container mx-auto px-6">
+                <div class="max-w-6xl mx-auto">
+                    <div class="bg-white rounded-3xl shadow-xl p-8 mb-12" data-aos="fade-up" data-aos-duration="600">
+                        <h2 class="text-3xl font-bold text-dark mb-8 text-center font-display">Upload Your Data</h2>
+                        
+                        <div class="grid md:grid-cols-2 gap-8">
+                            <!-- File Upload -->
+                            <div class="space-y-6" data-aos="fade-right" data-aos-delay="200">
+                                <h3 class="text-xl font-semibold text-dark flex items-center font-accent">
+                                    <i class="fas fa-upload text-primary mr-3"></i>
+                                    Upload FASTA File
+                                </h3>
+                                
+                                <div class="border-2 border-dashed border-gray-300 rounded-xl p-8 text-center hover:border-primary transition-colors duration-300" id="dropZone" role="button" tabindex="0" aria-label="File upload area. Drop FASTA files here or click to browse">
+                                    <div class="space-y-4">
+                                        <div class="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto">
+                                            <i class="fas fa-cloud-upload-alt text-primary text-2xl" aria-hidden="true"></i>
+                                        </div>
+                                        <div>
+                                            <p class="text-lg font-medium text-gray-700">Drop your FASTA file here</p>
+                                            <p class="text-gray-500">or click to browse</p>
+                                        </div>
+                                        <input type="file" id="fastaFile" accept=".fasta,.fa,.fas,.txt" class="hidden" aria-label="Choose FASTA file">
+                                        <button onclick="document.getElementById('fastaFile').click()" class="bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 transition-colors duration-300" aria-label="Browse for FASTA file">
+                                            Choose File
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="fileInfo" class="hidden bg-green-50 border border-green-200 rounded-lg p-4">
+                                    <div class="flex items-center text-green-700">
+                                        <i class="fas fa-check-circle mr-2"></i>
+                                        <span id="fileName"></span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Text Input -->
+                            <div class="space-y-6" data-aos="fade-left" data-aos-delay="400">
+                                <h3 class="text-xl font-semibold text-dark flex items-center font-accent">
+                                    <i class="fas fa-edit text-accent mr-3"></i>
+                                    Paste Sequences
+                                </h3>
+                                
+                                <div class="space-y-4">
+                                    <textarea 
+                                        id="sequenceInput" 
+                                        placeholder="Paste your FASTA sequences here...&#10;&#10;Example:&#10;>Sequence1&#10;ATCGATCGATCGATCG&#10;>Sequence2&#10;GCTAGCTAGCTAGCTA"
+                                        class="w-full h-64 p-4 border border-gray-300 rounded-lg focus:ring-2 focus:ring-accent focus:border-transparent resize-none font-mono text-sm"
+                                        aria-label="FASTA sequence input area"
+                                        aria-describedby="charCount"
+                                    ></textarea>
+                                    
+                                    <div class="flex justify-between items-center text-sm text-gray-500">
+                                        <span>Supports FASTA format</span>
+                                        <span id="charCount">0 characters</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Analysis Options -->
+                        <div class="mt-8 pt-8 border-t border-gray-200">
+                            <h3 class="text-xl font-semibold text-dark mb-6 font-accent">Analysis Options</h3>
+                            
+                            <div class="grid md:grid-cols-3 gap-6 mb-8">
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <label class="flex items-center space-x-3 cursor-pointer">
+                                        <input type="radio" name="analysisMode" value="rapid" class="text-primary focus:ring-primary" checked aria-describedby="rapid-desc">
+                                        <div>
+                                            <div class="font-semibold text-dark font-accent">Rapid Filter</div>
+                                            <div id="rapid-desc" class="text-sm text-gray-600">Quick species identification using our best-performing models.</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <label class="flex items-center space-x-3 cursor-pointer">
+                                        <input type="radio" name="analysisMode" value="comprehensive" class="text-primary focus:ring-primary" aria-describedby="comprehensive-desc">
+                                        <div>
+                                            <div class="font-semibold text-dark font-accent">Comprehensive</div>
+                                            <div id="comprehensive-desc" class="text-sm text-gray-600">Runs both Filter and Explorer pipelines for full analysis.</div>
+                                        </div>
+                                    </label>
+                                </div>
+                                
+                                <div class="bg-gray-50 rounded-lg p-4">
+                                    <label class="flex items-center space-x-3 cursor-pointer">
+                                        <input type="radio" name="analysisMode" value="custom" class="text-primary focus:ring-primary" aria-describedby="custom-desc">
+                                        <div>
+                                            <div class="font-semibold text-dark font-accent">Custom</div>
+                                            <div id="custom-desc" class="text-sm text-gray-600">Select specific models for your research needs.</div>
+                                        </div>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <div class="text-center">
+                                <button id="startAnalysisBtn" class="bg-gradient-to-r from-primary to-accent text-white px-12 py-4 rounded-lg font-semibold text-lg hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed font-accent" disabled aria-label="Start DNA sequence analysis" aria-describedby="analysis-help">
+                                    <i class="fas fa-play mr-2" aria-hidden="true"></i>
+                                    Start Analysis
+                                </button>
+                                <div id="analysis-help" class="sr-only">Upload a file or paste sequences to enable analysis</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- AI Models Section -->
+        <section class="py-16 bg-white">
+            <div class="container mx-auto px-6">
+                <div class="max-w-6xl mx-auto">
+                    <div class="text-center mb-16" data-aos="fade-up">
+                        <h2 class="text-4xl font-bold text-dark mb-6 font-display">Our AI Models</h2>
+                        <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                            The ATLAS system is built on specialized pipelines for different genetic markers.
+                        </p>
+                    </div>
+
+                    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                        <!-- Model 1: 16S Pipeline -->
+                        <div class="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 interactive-card" data-aos="fade-up" data-aos-delay="100">
+                            <div class="w-16 h-16 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-bacteria text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">16S Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our robust pipeline for identifying Bacteria and Archaea, utilizing the well-established 16S rRNA marker.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Prokaryotes</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">88.95%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">K-mer size of 6</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model 2: 18S Pipeline -->
+                        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl p-6 border border-green-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 interactive-card" data-aos="fade-up" data-aos-delay="200">
+                            <div class="w-16 h-16 bg-gradient-to-r from-green-500 to-emerald-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-leaf text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">18S Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                A specialized pipeline for identifying Eukaryotic organisms, with a unique parser to handle complex taxonomic strings.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Eukaryotes</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">64.09%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">Advanced taxonomy parser</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model 3: COI Pipeline -->
+                        <div class="bg-gradient-to-br from-red-50 to-orange-50 rounded-2xl p-6 border border-red-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 interactive-card" data-aos="fade-up" data-aos-delay="300">
+                            <div class="w-16 h-16 bg-gradient-to-r from-red-500 to-orange-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-fish text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">COI Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our most accurate pipeline, focused on identifying animal species using the Cytochrome Oxidase I gene.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Animalia</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">96.87%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">K-mer size of 8</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model 4: ITS Pipeline -->
+                        <div class="bg-gradient-to-br from-purple-50 to-violet-50 rounded-2xl p-6 border border-purple-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 interactive-card" data-aos="fade-up" data-aos-delay="400">
+                            <div class="w-16 h-16 bg-gradient-to-r from-purple-500 to-violet-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-fungus text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">ITS Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                A pipeline designed for the complex and variable fungal kingdom, using the ITS region for identification.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Target:</span>
+                                    <span class="font-semibold">Fungi</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Test Accuracy:</span>
+                                    <span class="font-semibold text-green-600">62.19%</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Key Feature:</span>
+                                    <span class="font-semibold">K-mer size of 7</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Model 5: Explorer Pipeline -->
+                        <div class="bg-gradient-to-br from-cyan-50 to-teal-50 rounded-2xl p-6 border border-cyan-100 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 md:col-span-2 lg:col-span-1 interactive-card" data-aos="fade-up" data-aos-delay="500">
+                            <div class="w-16 h-16 bg-gradient-to-r from-cyan-500 to-teal-600 rounded-xl flex items-center justify-center mb-6">
+                                <i class="fas fa-search text-white text-2xl"></i>
+                            </div>
+                            <h3 class="text-xl font-bold text-dark mb-3 font-accent">Explorer Pipeline</h3>
+                            <p class="text-gray-600 mb-4">
+                                Our cutting-edge unsupervised learning pipeline that discovers novel taxa and unknown genetic variants in environmental samples.
+                            </p>
+                            <div class="space-y-2 text-sm">
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Methodology:</span>
+                                    <span class="font-semibold">Doc2Vec & HDBSCAN</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Mission:</span>
+                                    <span class="font-semibold">Overcoming the "database gap"</span>
+                                </div>
+                                <div class="flex justify-between">
+                                    <span class="text-gray-500">Discovery:</span>
+                                    <span class="font-semibold">Clustering novel taxa</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Analysis Progress (Hidden by default) -->
+        <section id="analysisProgress" class="py-16 bg-gray-50 hidden">
+            <div class="container mx-auto px-6">
+                <div class="max-w-4xl mx-auto">
+                    <div class="bg-white rounded-2xl shadow-xl p-8">
+                        <h2 class="text-3xl font-bold text-dark mb-8 text-center font-display">Analysis in Progress</h2>
+                        
+                        <div class="space-y-6">
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-check text-white text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold">File Upload Complete</span>
+                                </div>
+                                <span class="text-green-600 font-semibold">100%</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-blue-50 rounded-lg">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center mr-4 animate-spin">
+                                        <i class="fas fa-spinner text-white text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold">Processing Sequences</span>
+                                </div>
+                                <span class="text-blue-600 font-semibold" id="processingProgress">45%</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg opacity-50">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-brain text-white text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold">AI Analysis</span>
+                                </div>
+                                <span class="text-gray-500 font-semibold">Pending</span>
+                            </div>
+                            
+                            <div class="flex items-center justify-between p-4 bg-gray-50 rounded-lg opacity-50">
+                                <div class="flex items-center">
+                                    <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center mr-4">
+                                        <i class="fas fa-chart-bar text-white text-sm"></i>
+                                    </div>
+                                    <span class="font-semibold">Generating Results</span>
+                                </div>
+                                <span class="text-gray-500 font-semibold">Pending</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8 text-center">
+                            <p class="text-gray-600 mb-4">Estimated time remaining: <span class="font-semibold">2 minutes</span></p>
+                            <button class="text-red-600 hover:text-red-700 font-semibold">Cancel Analysis</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-6">
+            <div class="text-center">
+                <div class="flex items-center justify-center space-x-3 mb-4">
+                    <div class="w-12 h-12 bg-gradient-to-r from-primary to-accent rounded-lg flex items-center justify-center">
+                        <i class="fas fa-dna text-white text-xl"></i>
+                    </div>
+                    <span class="text-3xl font-bold font-accent">ATLAS</span>
+                </div>
+        
+                <div class="text-gray-500 text-sm">
+                    © 2025 ATLAS. All rights reserved. Team Diggaj
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <script src="analysis.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            easing: 'ease-in-out',
+            once: true,
+            offset: 100
+        });
+    </script>
+</body>
+</html>

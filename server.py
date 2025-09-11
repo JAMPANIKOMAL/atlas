@@ -12,10 +12,9 @@ from predict_refactored import run_analysis
 
 # --- Configuration ---
 PORT = 8000
-# The server now looks for index.html in the same directory as itself
 ROOT_DIR = Path(__file__).parent
-HTML_FILE_PATH = os.path.join(ROOT_DIR, 'index.html')
-TEMP_DIR = os.path.join(ROOT_DIR, 'temp')
+HTML_FILE_PATH = ROOT_DIR / 'index.html'
+TEMP_DIR = ROOT_DIR / 'temp'
 os.makedirs(TEMP_DIR, exist_ok=True)
 
 # Define the custom handler class that extends the standard HTTP server
@@ -26,7 +25,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         if self.path == '/':
             self.path = '/index.html'
         
-        # We need to serve the file from the correct location
         if self.path == '/index.html':
             self.send_response(200)
             self.send_header('Content-type', 'text/html')
@@ -34,7 +32,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
             with open(HTML_FILE_PATH, 'rb') as f:
                 self.wfile.write(f.read())
             return
-            
+        
+        # This allows the server to correctly serve assets like Chart.js
         return super().do_GET()
 
     def do_POST(self):
@@ -64,23 +63,17 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
         
         try:
             if fasta_file_data and isinstance(fasta_file_data, bytes):
-                # Save the uploaded file data to a temporary FASTA file
-                temp_fasta_path = os.path.join(TEMP_DIR, 'temp_upload.fasta')
+                temp_fasta_path = TEMP_DIR / 'temp_upload.fasta'
                 with open(temp_fasta_path, 'wb') as f:
                     f.write(fasta_file_data)
-                
-                # Run the analysis on the temporary file
-                analysis_result = run_analysis(temp_fasta_path)
+                analysis_result = run_analysis(str(temp_fasta_path))
             
             elif input_data:
-                # Save the text input to a temporary FASTA file
-                temp_fasta_path = os.path.join(TEMP_DIR, 'temp_input.fasta')
+                temp_fasta_path = TEMP_DIR / 'temp_input.fasta'
                 with open(temp_fasta_path, 'w', encoding='utf-8') as f:
                     f.write(input_data)
-                
-                # Run the analysis on the temporary file
-                analysis_result = run_analysis(temp_fasta_path)
-            
+                analysis_result = run_analysis(str(temp_fasta_path))
+
             self.send_response(200)
             self.send_header('Content-type', 'application/json')
             self.end_headers()
@@ -98,7 +91,6 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 # --- Start the Server ---
 if __name__ == "__main__":
-    # Corrected path to the HTML file for serving
     os.chdir(ROOT_DIR) 
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         print(f"ATLAS server started at http://localhost:{PORT}")

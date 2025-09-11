@@ -24,6 +24,7 @@ from tqdm import tqdm
 import io
 import os
 import shutil
+import tensorflow as tf
 
 # --- Configuration ---
 project_root = Path(__file__).parent.parent
@@ -97,6 +98,15 @@ class TaxonClassifier:
         
         return None, top_prob
 
+# --- GPU Check Function ---
+def check_gpu_status():
+    """Checks and returns the GPU availability status."""
+    gpus = tf.config.list_physical_devices('GPU')
+    if gpus:
+        return f"GPU is available and configured: {gpus[0].name}"
+    else:
+        return "GPU not found. Running on CPU."
+
 # =============================================================================
 # --- Main Analysis Function ---
 # =============================================================================
@@ -110,7 +120,11 @@ def run_analysis(input_fasta_path):
     Returns:
         dict: A dictionary containing the analysis results.
     """
-    # --- 1. Load All Filter Models ---
+    # --- 1. Check GPU Status ---
+    gpu_status = check_gpu_status()
+    print(f"\n--- GPU Status: {gpu_status} ---")
+
+    # --- 2. Load All Filter Models ---
     print("--- Step 1: Loading All 'Filter' AI Models ---")
     potential_classifiers = [
         TaxonClassifier("16s", 6),
@@ -130,7 +144,7 @@ def run_analysis(input_fasta_path):
         missing = [clf.name for clf in potential_classifiers if not clf.is_loaded]
         print(f"  - Warning: Missing models for: {missing}")
 
-    # --- 2. Process Input FASTA ---
+    # --- 3. Process Input FASTA ---
     print(f"\n--- Step 2: Processing Input File: {Path(input_fasta_path).name} ---")
     try:
         input_sequences = list(SeqIO.parse(input_fasta_path, "fasta"))
@@ -157,7 +171,7 @@ def run_analysis(input_fasta_path):
     print(f"    - Known organisms identified: {sum(classified_results.values())}")
     print(f"    - Unclassified sequences: {len(unclassified_sequences)}")
     
-    # --- 3. Run Explorer Pipeline (if necessary) ---
+    # --- 4. Run Explorer Pipeline (if necessary) ---
     explorer_report_content = "No unclassified sequences to explore."
     if unclassified_sequences:
         print("\n--- Step 3: Starting 'Explorer' AI Pipeline ---")
@@ -188,7 +202,7 @@ def run_analysis(input_fasta_path):
         temp_fasta_path.unlink() # Clean up temp FASTA file
         print("  - Explorer pipeline complete.")
 
-    # --- 4. Generate Final Report ---
+    # --- 5. Generate Final Report ---
     print("\n--- Step 4: Generating Final Biodiversity Report ---")
     final_report_path = REPORTS_DIR / f"ATLAS_REPORT_{Path(input_fasta_path).stem}.txt"
     
@@ -197,6 +211,7 @@ def run_analysis(input_fasta_path):
         f.write("       ATLAS: AI Taxonomic Learning & Analysis System\n")
         f.write("                         FINAL REPORT\n")
         f.write("="*60 + "\n\n")
+        f.write(f"GPU Status: {gpu_status}\n")
         f.write(f"Input File: {Path(input_fasta_path).name}\n")
         f.write(f"Total Sequences Analyzed: {len(input_sequences)}\n\n")
 

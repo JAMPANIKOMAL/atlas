@@ -60,13 +60,14 @@ document.addEventListener('DOMContentLoaded', () => {
         e.preventDefault();
         dropZone.classList.remove('border-primary');
         const file = e.dataTransfer.files[0];
-        if (file && file.name.endsWith('.fasta') || file.name.endsWith('.fa') || file.name.endsWith('.txt')) {
+        if (file && (file.name.endsWith('.fasta') || file.name.endsWith('.fa') || file.name.endsWith('.fas') || file.name.endsWith('.txt'))) {
             const dataTransfer = new DataTransfer();
             dataTransfer.items.add(file);
             fileInput.files = dataTransfer.files;
             fileInput.dispatchEvent(new Event('change'));
         } else {
-            alert('Please drop a valid FASTA file (.fasta, .fa, .txt).');
+            // Using a custom modal would be better, but for now, an alert is a quick fix
+            alert('Please drop a valid FASTA file (.fasta, .fa, .fas, .txt).');
         }
     });
 
@@ -92,7 +93,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         let sequences = '';
-
         if (hasFile) {
             sequences = await uploadedFile.text();
         } else {
@@ -101,18 +101,26 @@ document.addEventListener('DOMContentLoaded', () => {
         
         // Simple validation to check for a FASTA-like format
         if (!sequences.startsWith('>')) {
-            alert('Input does not appear to be in valid FASTA format. Please ensure each sequence starts with a ">" header.');
+            alert('Input does not appear to be in valid FASTA format. A FASTA file starts with a ">" followed by a sequence header, and then the DNA sequence on subsequent lines.');
             return;
         }
 
-        // Show a loading screen or progress indicator
         const uploadSection = document.getElementById('uploadSection');
         const analysisProgressSection = document.getElementById('analysisProgress');
         
         if (uploadSection && analysisProgressSection) {
-            // Hide the upload section and show the progress section
             uploadSection.classList.add('hidden');
             analysisProgressSection.classList.remove('hidden');
+
+            const processingStep = document.getElementById('processingStep');
+            const aiStep = document.getElementById('aiStep');
+            const reportStep = document.getElementById('reportStep');
+
+            // Set initial progress state
+            processingStep.classList.add('bg-blue-50');
+            processingStep.classList.remove('bg-gray-50', 'opacity-50');
+            aiStep.classList.add('bg-gray-50', 'opacity-50');
+            reportStep.classList.add('bg-gray-50', 'opacity-50');
 
             try {
                 const response = await fetch('/api/analyze', {
@@ -121,30 +129,57 @@ document.addEventListener('DOMContentLoaded', () => {
                     body: JSON.stringify({ sequences: sequences })
                 });
 
-                const result = await response.json();
+                if (!response.ok) {
+                    throw new Error(`Server responded with status: ${response.status}`);
+                }
+
+                // Simulate AI Analysis step visually
+                processingStep.classList.remove('bg-blue-50');
+                processingStep.classList.add('bg-green-50');
+                processingStep.querySelector('i').classList.remove('fa-spinner', 'animate-spin');
+                processingStep.querySelector('i').classList.add('fa-check');
+                processingStep.querySelector('span').textContent = '100%';
                 
-                if (response.ok) {
-                    // Display a success message or trigger a download
+                aiStep.classList.add('bg-blue-50');
+                aiStep.classList.remove('bg-gray-50', 'opacity-50');
+                aiStep.querySelector('i').classList.add('fa-spinner', 'animate-spin');
+                aiStep.querySelector('span').textContent = 'In Progress';
+                
+                const result = await response.json();
+
+                if (result.status === 'success') {
+                    // Simulate Report Generation step visually
+                    aiStep.classList.remove('bg-blue-50');
+                    aiStep.classList.add('bg-green-50');
+                    aiStep.querySelector('i').classList.remove('fa-spinner', 'animate-spin');
+                    aiStep.querySelector('i').classList.add('fa-check');
+                    aiStep.querySelector('span').textContent = '100%';
+
+                    reportStep.classList.add('bg-blue-50');
+                    reportStep.classList.remove('bg-gray-50', 'opacity-50');
+                    reportStep.querySelector('i').classList.add('fa-spinner', 'animate-spin');
+                    reportStep.querySelector('span').textContent = 'In Progress';
+
+                    // Finalize the process
+                    reportStep.classList.remove('bg-blue-50');
+                    reportStep.classList.add('bg-green-50');
+                    reportStep.querySelector('i').classList.remove('fa-spinner', 'animate-spin');
+                    reportStep.querySelector('i').classList.add('fa-check');
+                    reportStep.querySelector('span').textContent = '100%';
+
                     alert('Analysis complete! Your report is being downloaded.');
                     
-                    // Trigger download of the report
                     if (result.report_path) {
                         window.open(`/reports/${result.report_path.split('/').pop()}`, '_blank');
                     }
-                    
-                    // For demo purposes, reload to restart
                     window.location.reload();
 
                 } else {
-                    console.error('Analysis failed:', result.error);
-                    alert(`Analysis failed: ${result.error}`);
-                    // Hide progress and show upload section again
-                    analysisProgressSection.classList.add('hidden');
-                    uploadSection.classList.remove('hidden');
+                    throw new Error(result.error || 'Unknown analysis error.');
                 }
             } catch (error) {
-                console.error('Network or server error:', error);
-                alert(`A network or server error occurred: ${error}`);
+                console.error('Analysis failed:', error);
+                alert(`Analysis failed: ${error.message}`);
                 // Hide progress and show upload section again
                 analysisProgressSection.classList.add('hidden');
                 uploadSection.classList.remove('hidden');

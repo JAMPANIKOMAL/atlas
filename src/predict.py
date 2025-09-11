@@ -1,10 +1,14 @@
+#!/usr/bin/env python3
 # =============================================================================
-# ATLAS - MASTER PREDICTION SCRIPT (REFRACTORED FOR WEB APP)
+# ATLAS - MASTER PREDICTION SCRIPT
 # =============================================================================
-# This is the main entry point for the ATLAS system, now refactored to be
-# callable as a function from a web application.
+# This script is the core prediction engine for the ATLAS system. It provides
+# a single, robust function to analyze a FASTA file by running it through
+# both the "Filter" and "Explorer" AI pipelines.
 #
-# The original logic has been moved into the `run_analysis` function.
+# The original logic from 'predict_refactored.py' has been used as a base
+# as it is more stable and performs all operations in-memory without relying
+# on fragile subprocess calls to other scripts.
 #
 # =============================================================================
 
@@ -15,7 +19,6 @@ from Bio import SeqIO
 from pathlib import Path
 import pickle
 import argparse
-import subprocess
 import sys
 from collections import Counter
 from tensorflow.keras.models import load_model
@@ -25,13 +28,19 @@ import io
 import os
 import shutil
 import tensorflow as tf
+from contextlib import redirect_stdout
+import uuid
+import hdbscan
+from gensim.models.doc2vec import Doc2Vec, TaggedDocument
+from sklearn.preprocessing import normalize
+import gc
 
 # --- Configuration ---
 project_root = Path(__file__).parent.parent
 MODELS_DIR = project_root / "models"
-SRC_DIR = project_root / "src"
 REPORTS_DIR = project_root / "reports"
 REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+TEMP_EXPLORER_DIR = REPORTS_DIR / "temp"
 
 # --- Helper Function for K-mer Counting ---
 def get_kmer_counts(sequence, k):
@@ -61,8 +70,7 @@ class TaxonClassifier:
             vectorizer_path = MODELS_DIR / f"{self.name}_genus_vectorizer.pkl"
             encoder_path = MODELS_DIR / f"{self.name}_genus_label_encoder.pkl"
             
-            if not model_path.exists():
-                print(f"Warning: Model for {self.name} not found at {model_path}")
+            if not model_path.exists() or not vectorizer_path.exists() or not encoder_path.exists():
                 return False
             
             self.model = load_model(model_path)
@@ -72,7 +80,8 @@ class TaxonClassifier:
                 self.label_encoder = pickle.load(f)
             return True
         except Exception as e:
-            print(f"Error loading {self.name} model: {e}")
+            # Added for debugging purposes
+            print(f"Error loading {self.name} model: {e}", file=sys.stderr)
             return False
 
     def predict(self, sequence, confidence_threshold=0.8):
@@ -103,9 +112,64 @@ def check_gpu_status():
     """Checks and returns the GPU availability status."""
     gpus = tf.config.list_physical_devices('GPU')
     if gpus:
-        return f"GPU is available and configured: {gpus[0].name}"
+        return f"GPU is available: {gpus[0].name}"
     else:
         return "GPU not found. Running on CPU."
+
+# --- Explorer Pipeline Functions (now in-memory) ---
+# NOTE: These functions are copied from the explorer pipeline scripts
+# and modified to work in-memory and return values directly.
+def explorer_step_1_vectorize(sequences):
+    KMER_SIZE = 6
+    VECTOR_SIZE = 100
+    
+    doc2vec_model_path = MODELS_DIR / "explorer_doc2vec.model"
+    if doc2vec_model_path.exists():
+        doc2vec_model = Doc2Vec.load(str(doc2vec_model_path))
+    else:
+        # NOTE: A real-world application would need a way to train this model
+        # if it's not present. For this CLI, we assume it's pre-trained.
+        print("Warning: Explorer model not found. This pipeline will fail.")
+        return np.array([]), np.array([])
+    
+    corpus = [
+        TaggedDocument(
+            words=[str(s.seq) for s in sequences], tags=[s.id]
+        ) for s in sequences
+    ]
+    
+    sequence_vectors = np.array([doc2vec_model.dv[seq.id] for seq in corpus])
+    sequence_vectors = normalize(sequence_vectors)
+    
+    return sequence_vectors
+
+def explorer_step_2_cluster(sequence_vectors):
+    clusterer = hdbscan.HDBSCAN(min_cluster_size=5, min_samples=1, metric='euclidean', cluster_selection_method='eom')
+    cluster_labels = clusterer.fit_predict(sequence_vectors)
+    return cluster_labels
+
+def explorer_step_3_interpret(sequences, sequence_vectors, cluster_labels):
+    report_lines = []
+    unique_cluster_ids = sorted(np.unique(cluster_labels))
+    if -1 in unique_cluster_ids:
+        unique_cluster_ids.remove(-1)
+
+    for cluster_id in unique_cluster_ids:
+        cluster_indices = np.where(cluster_labels == cluster_id)[0]
+        cluster_vectors = sequence_vectors[cluster_indices]
+        
+        centroid = np.mean(cluster_vectors, axis=0)
+        distances = [np.linalg.norm(vec - centroid) for vec in cluster_vectors]
+        rep_index_in_cluster = np.argmin(distances)
+        
+        representative_sequence = sequences[cluster_indices[rep_index_in_cluster]]
+        
+        report_lines.append(f"Cluster ID: {cluster_id}")
+        report_lines.append(f"  - Size: {len(cluster_indices)} sequences")
+        report_lines.append(f"  - Representative Sequence ID: {representative_sequence.id}")
+        report_lines.append(f"  - Note: BLAST functionality is not implemented in this version of the script.")
+
+    return "\n".join(report_lines)
 
 # =============================================================================
 # --- Main Analysis Function ---
@@ -120,166 +184,89 @@ def run_analysis(input_fasta_path):
     Returns:
         dict: A dictionary containing the analysis results.
     """
+    
     # --- 1. Check GPU Status ---
     gpu_status = check_gpu_status()
-    print(f"\n--- GPU Status: {gpu_status} ---")
 
-    # --- 2. Load All Filter Models ---
-    print("--- Step 1: Loading All 'Filter' AI Models ---")
+    # --- 2. Load and Run Filter Models Sequentially ---
     potential_classifiers = [
-        TaxonClassifier("16s", 6),
-        TaxonClassifier("18s", 6),
-        TaxonClassifier("coi", 8),
-        TaxonClassifier("its", 7)
+        ("16s", 6), ("18s", 6), ("coi", 8), ("its", 7)
     ]
     
-    # Only keep successfully loaded classifiers
-    classifiers = [clf for clf in potential_classifiers if clf.is_loaded]
-    
-    if not classifiers:
-        return {"error": "No trained models found. Please ensure models are available."}
-    
-    print(f"  - Successfully loaded {len(classifiers)} models: {[clf.name for clf in classifiers]}")
-    if len(classifiers) < len(potential_classifiers):
-        missing = [clf.name for clf in potential_classifiers if not clf.is_loaded]
-        print(f"  - Warning: Missing models for: {missing}")
-
-    # --- 3. Process Input FASTA ---
-    print(f"\n--- Step 2: Processing Input File: {Path(input_fasta_path).name} ---")
-    try:
-        input_sequences = list(SeqIO.parse(input_fasta_path, "fasta"))
-    except Exception as e:
-        return {"error": f"Failed to parse FASTA file: {e}"}
-        
     classified_results = Counter()
     unclassified_sequences = []
 
-    for seq_record in tqdm(input_sequences, desc="  - Classifying sequences"):
-        sequence_str = str(seq_record.seq)
-        prediction_made = False
-        for classifier in classifiers:
-            label, prob = classifier.predict(sequence_str)
-            if label:
-                classified_results[label] += 1
-                prediction_made = True
-                break
-        
-        if not prediction_made:
-            unclassified_sequences.append(seq_record)
-
-    print(f"  - Classification complete.")
-    print(f"    - Known organisms identified: {sum(classified_results.values())}")
-    print(f"    - Unclassified sequences: {len(unclassified_sequences)}")
+    try:
+        input_sequences = list(SeqIO.parse(input_fasta_path, "fasta"))
+    except Exception as e:
+        return {"status": "error", "message": f"Failed to parse FASTA file: {e}"}
     
-    # --- 4. Run Explorer Pipeline (if necessary) ---
+    unclassified_sequences = input_sequences.copy()
+
+    for name, kmer_size in potential_classifiers:
+        # Load one model at a time
+        classifier = TaxonClassifier(name, kmer_size)
+        if classifier.is_loaded:
+            newly_classified = []
+            sequences_to_reprocess = []
+            
+            for seq_record in unclassified_sequences:
+                label, prob = classifier.predict(str(seq_record.seq))
+                if label:
+                    classified_results[label] += 1
+                    newly_classified.append(seq_record)
+                else:
+                    sequences_to_reprocess.append(seq_record)
+            
+            unclassified_sequences = sequences_to_reprocess
+        
+        # Unload the model and clear memory
+        del classifier
+        tf.keras.backend.clear_session()
+        gc.collect()
+
+    # --- 3. Run Explorer Pipeline (if necessary) ---
     explorer_report_content = "No unclassified sequences to explore."
     if unclassified_sequences:
-        print("\n--- Step 3: Starting 'Explorer' AI Pipeline ---")
-        
-        temp_dir = REPORTS_DIR / "temp"
-        temp_dir.mkdir(exist_ok=True)
-        temp_fasta_path = temp_dir / "unclassified_sequences.fasta"
-        SeqIO.write(unclassified_sequences, temp_fasta_path, "fasta")
-        
-        explorer_scripts = [
-            "01_vectorize_sequences.py",
-            "02_cluster_sequences.py",
-            "03_interpret_clusters.py"
-        ]
-        
-        # --- FIX: Pass input file paths as arguments ---
-        # The original code was trying to run the scripts without the necessary arguments.
-        # This loop now constructs the correct arguments for each script.
-        vectorized_path = temp_dir / "explorer_sequence_vectors.npy"
-        ids_path = temp_dir / "explorer_sequence_ids.npy"
-        clusters_path = temp_dir / "explorer_cluster_results.csv"
-
         try:
-            # 01_vectorize_sequences.py
-            script_path_1 = SRC_DIR / "pipeline_explorer" / explorer_scripts[0]
-            print(f"  - Running {explorer_scripts[0]}...")
-            subprocess.run(
-                [sys.executable, str(script_path_1), "--input_fasta", str(temp_fasta_path)],
-                check=True, capture_output=True, text=True
-            )
-            
-            # 02_cluster_sequences.py
-            script_path_2 = SRC_DIR / "pipeline_explorer" / explorer_scripts[1]
-            print(f"  - Running {explorer_scripts[1]}...")
-            subprocess.run(
-                [sys.executable, str(script_path_2), "--vectors_path", str(vectorized_path), "--ids_path", str(ids_path)],
-                check=True, capture_output=True, text=True
-            )
-            
-            # 03_interpret_clusters.py
-            script_path_3 = SRC_DIR / "pipeline_explorer" / explorer_scripts[2]
-            print(f"  - Running {explorer_scripts[2]}...")
-            subprocess.run(
-                [sys.executable, str(script_path_3), "--clusters_path", str(clusters_path), "--fasta_path", str(temp_fasta_path), "--vectors_path", str(vectorized_path)],
-                check=True, capture_output=True, text=True
-            )
-
-            # Read the final report
-            explorer_report_path = project_root / "explorer_final_report.txt"
-            if explorer_report_path.exists():
-                with open(explorer_report_path, 'r') as f:
-                    explorer_report_content = f.read()
-                explorer_report_path.unlink() # Clean up explorer report
-
-        except subprocess.CalledProcessError as e:
-            print(f"Subprocess failed with error: {e.stderr}", file=sys.stderr)
-            raise Exception(f"Explorer pipeline failed. Check the error logs for details.")
-
-        finally:
-            # Clean up the temporary directory
-            shutil.rmtree(temp_dir, ignore_errors=True)
-            print("  - Explorer pipeline complete.")
-
-    # --- 5. Generate Final Report ---
-    print("\n--- Step 4: Generating Final Biodiversity Report ---")
-    report_file_name = f"ATLAS_REPORT_{Path(input_fasta_path).stem}_{uuid.uuid4().hex}.txt"
-    final_report_path = REPORTS_DIR / report_file_name
+            sequence_vectors = explorer_step_1_vectorize(unclassified_sequences)
+            cluster_labels = explorer_step_2_cluster(sequence_vectors)
+            explorer_report_content = explorer_step_3_interpret(unclassified_sequences, sequence_vectors, cluster_labels)
+        except Exception as e:
+            explorer_report_content = f"Error during explorer pipeline: {e}"
     
-    with open(final_report_path, "w") as f:
-        f.write("="*60 + "\n")
-        f.write("       ATLAS: AI Taxonomic Learning & Analysis System\n")
-        f.write("                         FINAL REPORT\n")
-        f.write("="*60 + "\n\n")
-        f.write(f"GPU Status: {gpu_status}\n")
-        f.write(f"Input File: {Path(input_fasta_path).name}\n")
-        f.write(f"Total Sequences Analyzed: {len(input_sequences)}\n\n")
+    # --- 4. Generate Final Report ---
+    sorted_results = sorted(classified_results.items(), key=lambda item: item[1], reverse=True)
+    classified_results_str = 'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in sorted_results])
 
-        f.write("-" * 30 + "\n")
-        f.write("Part 1: Known Organisms (Filter Results)\n")
-        f.write("-" * 30 + "\n\n")
-        if classified_results:
-            for genus, count in sorted(classified_results.items(), key=lambda item: item[1], reverse=True):
-                f.write(f"- {genus}: {count} sequences\n")
-        else:
-            f.write("No known organisms were identified by the Filter models.\n")
-        
-        f.write("\n\n" + "-" * 30 + "\n")
-        f.write("Part 2: Novel Taxa Discovery (Explorer Results)\n")
-        f.write("-" * 30 + "\n\n")
-        f.write(explorer_report_content)
+    final_report_text = f"""
+============================================================
+          ATLAS: AI Taxonomic Learning & Analysis System
+                        FINAL REPORT
+============================================================
+
+GPU Status: {gpu_status}
+Input File: {Path(input_fasta_path).name}
+Total Sequences Analyzed: {len(input_sequences)}
+
+--------------------------------------
+Part 1: Known Organisms (Filter Results)
+--------------------------------------
+{classified_results_str}
+
+--------------------------------------
+Part 2: Novel Taxa Discovery (Explorer Results)
+--------------------------------------
+{explorer_report_content}
+"""
     
-    print(f"  - Report saved successfully to: {final_report_path}")
-
-    # Return a summary for the web app
     return {
         "status": "success",
-        "report_path": str(final_report_path),
-        "total_sequences": len(input_sequences),
-        "classified": sum(classified_results.values()),
-        "unclassified": len(unclassified_sequences),
+        "report_content": final_report_text.strip(),
         "classified_results": {k: v for k, v in classified_results.items()},
-        "explorer_report": explorer_report_content
     }
 
-# =============================================================================
-# --- Original script's main execution block (now a simple placeholder) ---
-# This block is for running the script directly from the command line.
-# =============================================================================
+# --- Main execution block for command-line interface ---
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="ATLAS: AI Taxonomic Learning & Analysis System")
     parser.add_argument(
@@ -288,5 +275,9 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
     
-    run_analysis(args.input_fasta)
+    # Use the run_analysis function
+    result = run_analysis(args.input_fasta)
+
+    # Print a clean, formatted report to the console
+    print(result["report_content"])
     print("\n[SUCCESS] ATLAS analysis complete.")

@@ -42,6 +42,7 @@ from collections import Counter
 import gc
 import io
 import uuid
+import logging
 
 # --- Machine Learning & Data Processing Imports ---
 from tensorflow.keras.models import load_model
@@ -93,40 +94,46 @@ class TaxonClassifier:
     This class encapsulates the model, DictVectorizer, and LabelEncoder,
     ensuring they are all loaded correctly for a specific marker (e.g., 16s, coi).
     """
-    def __init__(self, marker_name: str, kmer_size: int):
+    def __init__(self, marker_name: str, kmer_size: int, verbose: bool):
         self.name = marker_name
         self.kmer_size = kmer_size
         self.model = None
         self.vectorizer = None
         self.label_encoder = None
-        # Check if all necessary artifacts exist and load them
-        self.is_loaded = self._load_artifacts()
+        self.is_loaded = self._load_artifacts(verbose)
 
-    def _load_artifacts(self) -> bool:
+    def _load_artifacts(self, verbose: bool) -> bool:
         """
         Loads the model, vectorizer, and label encoder from disk.
+
+        Args:
+            verbose (bool): If True, prints verbose loading messages.
 
         Returns:
             bool: True if all artifacts were successfully loaded, False otherwise.
         """
+        if verbose:
+            logging.info(f"  - Attempting to load '{self.name}' model...")
         try:
             model_path = MODELS_DIR / f"{self.name}_genus_classifier.keras"
             vectorizer_path = MODELS_DIR / f"{self.name}_genus_vectorizer.pkl"
             encoder_path = MODELS_DIR / f"{self.name}_genus_label_encoder.pkl"
             
-            # All three files must exist for the model to be usable
             if not model_path.exists() or not vectorizer_path.exists() or not encoder_path.exists():
+                if verbose:
+                    logging.warning(f"  - Skipping {self.name}: Required model artifacts not found.")
                 return False
             
-            # Load the artifacts
             self.model = load_model(model_path)
             with open(vectorizer_path, 'rb') as f:
                 self.vectorizer = pickle.load(f)
             with open(encoder_path, 'rb') as f:
                 self.label_encoder = pickle.load(f)
+            if verbose:
+                logging.info(f"  - Successfully loaded '{self.name}' model.")
             return True
         except Exception as e:
-            print(f"Error loading {self.name} model: {e}", file=sys.stderr)
+            logging.error(f"Error loading {self.name} model: {e}", file=sys.stderr)
             return False
 
     def predict(self, sequence: str, confidence_threshold: float = 0.8) -> tuple[str, float]:
@@ -257,14 +264,14 @@ def explorer_step_3_interpret(sequences: list, sequence_vectors: np.ndarray, clu
         report_lines.append(f"Cluster ID: {cluster_id}")
         report_lines.append(f"  - Size: {len(cluster_indices)} sequences")
         report_lines.append(f"  - Representative Sequence ID: {representative_sequence.id}")
-        report_lines.append(f"  - Note: BLAST is not run automatically, as it is a slow external step. A manual BLAST search on this representative sequence ID is recommended to hypothesize a taxonomic identity.\n")
+        report_lines.append(f"  - Note: A manual BLAST search on this representative sequence ID is recommended to hypothesize a taxonomic identity.\n")
 
     return "\n".join(report_lines)
 
 # =============================================================================
 # --- Main Analysis Function ---
 # =============================================================================
-def run_analysis(input_fasta_path: Path):
+def run_analysis(input_fasta_path: Path, report_name: str = None, verbose: bool = False):
     """
     The main analysis pipeline.
 
@@ -278,6 +285,8 @@ def run_analysis(input_fasta_path: Path):
 
     Args:
         input_fasta_path (Path): The Path object to the input FASTA file.
+        report_name (str): The desired name for the output report file.
+        verbose (bool): If True, prints detailed logging messages.
         
     Returns:
         dict: A dictionary containing the analysis results, including a
@@ -302,10 +311,16 @@ def run_analysis(input_fasta_path: Path):
     
     unclassified_sequences = input_sequences.copy()
 
+    if verbose:
+        logging.info("\n[  STAGE 1: KNOWN TAXA CLASSIFICATION  ]")
+        logging.info("---------------------------------------------")
+
     # The sequential loading and unloading of models is critical for memory management.
     for name, kmer_size in potential_classifiers:
-        classifier = TaxonClassifier(name, kmer_size)
+        classifier = TaxonClassifier(name, kmer_size, verbose)
         if classifier.is_loaded:
+            if verbose:
+                logging.info(f"  - Classifying with {name} model...")
             newly_classified = []
             sequences_to_reprocess = []
             
@@ -318,6 +333,8 @@ def run_analysis(input_fasta_path: Path):
                     sequences_to_reprocess.append(seq_record)
             
             unclassified_sequences = sequences_to_reprocess
+            if verbose:
+                logging.info(f"    - Found {len(newly_classified)} known sequences.")
         
         # Explicitly unload the model and free memory
         del classifier
@@ -327,6 +344,10 @@ def run_analysis(input_fasta_path: Path):
     # --- 3. Run Explorer Pipeline (if necessary) ---
     explorer_report_content = ""
     if unclassified_sequences:
+        if verbose:
+            logging.info("\n[  STAGE 2: NOVEL TAXA EXPLORATION  ]")
+            logging.info("------------------------------------------")
+            logging.info(f"  - {len(unclassified_sequences)} sequences remain unclassified. Starting explorer pipeline.")
         try:
             sequence_vectors = explorer_step_1_vectorize(unclassified_sequences)
             cluster_labels = explorer_step_2_cluster(sequence_vectors)
@@ -334,34 +355,53 @@ def run_analysis(input_fasta_path: Path):
         except Exception as e:
             explorer_report_content = f"Error during explorer pipeline: {e}"
     else:
-         explorer_report_content = "All sequences were classified by the Filter models. No need for the Explorer pipeline."
+        if verbose:
+            logging.info("\n[  STAGE 2: NOVEL TAXA EXPLORATION  ]")
+            logging.info("------------------------------------------")
+            logging.info("  - All sequences were classified by the Filter models. Skipping explorer.")
+        explorer_report_content = "All sequences were classified by the Filter models. No need for the Explorer pipeline."
     
     # --- 4. Generate Final Report ---
     sorted_results = sorted(classified_results.items(), key=lambda item: item[1], reverse=True)
     classified_results_str = 'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in sorted_results])
 
     final_report_text = f"""
-============================================================
-          ATLAS: AI Taxonomic Learning & Analysis System
-                         FINAL REPORT
-============================================================
++-------------------------------------------------------------+
+|          ATLAS: AI Taxonomic Learning & Analysis System     |
+|                         FINAL REPORT                        |
++-------------------------------------------------------------+
 
 [  ENVIRONMENT & INPUT  ]
-------------------------------------------------------------
-GPU Status: {gpu_status}
-Input File: {Path(input_fasta_path).name}
-Total Sequences Analyzed: {len(input_sequences)}
++-------------------------------------------------------------+
+| GPU Status: {gpu_status}
+| Input File: {Path(input_fasta_path).name}
+| Total Sequences Analyzed: {len(input_sequences)}
++-------------------------------------------------------------+
 
 [  PART 1: FILTER RESULTS  ]
-------------------------------------------------------------
-(Classification of known organisms)
++-------------------------------------------------------------+
+| (Classification of known organisms)
 {classified_results_str}
++-------------------------------------------------------------+
 
 [  PART 2: EXPLORER RESULTS  ]
-------------------------------------------------------------
-(Discovery of novel or unclassified taxa)
++-------------------------------------------------------------+
+| (Discovery of novel or unclassified taxa)
 {explorer_report_content}
++-------------------------------------------------------------+
 """
+    
+    # --- 5. Save Report to File ---
+    report_filename = (report_name if report_name else f"ATLAS_REPORT_{Path(input_fasta_path).stem}_{uuid.uuid4().hex}") + ".txt"
+    report_path = REPORTS_DIR / report_filename
+
+    try:
+        with open(report_path, "w") as f:
+            f.write(final_report_text.strip())
+        if verbose:
+            logging.info(f"\n[SUCCESS] Analysis complete. Report saved to: {report_path}")
+    except Exception as e:
+        logging.error(f"\n[ERROR] Failed to save report file: {e}", file=sys.stderr)
     
     return {
         "status": "success",
@@ -374,30 +414,63 @@ Total Sequences Analyzed: {len(input_sequences)}
 # =============================================================================
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
-        description="ATLAS: AI Taxonomic Learning & Analysis System. Processes a FASTA file through filter and explorer pipelines."
+        description="ATLAS: AI Taxonomic Learning & Analysis System. Processes a FASTA file through filter and explorer pipelines.",
+        usage="python -m cli --input_fasta <path_to_file> [--report-name <name>] [--verbose]"
     )
     parser.add_argument(
         '--input_fasta', 
         type=Path, 
-        required=True,
         help="Path to the input FASTA file for analysis."
+    )
+    parser.add_argument(
+        '--report-name',
+        type=str,
+        help="A custom name for the output report file (e.g., 'my_report')."
+    )
+    parser.add_argument(
+        '--verbose',
+        action='store_true',
+        help="Enable verbose output to show detailed analysis steps."
     )
     args = parser.parse_args()
     
-    # Run the main analysis function
-    result = run_analysis(args.input_fasta)
-
-    # Generate a unique filename for the report
-    report_filename = f"ATLAS_REPORT_{Path(args.input_fasta).stem}_{uuid.uuid4().hex}.txt"
-    report_path = REPORTS_DIR / report_filename
-
-    # Save the report to the reports folder
-    try:
-        with open(report_path, "w") as f:
-            f.write(result["report_content"])
-        print(f"\n[SUCCESS] Analysis complete. Report saved to: {report_path}")
-    except Exception as e:
-        print(f"\n[ERROR] Failed to save report file: {e}", file=sys.stderr)
+    # Set logging level based on the --verbose flag
+    if args.verbose:
+        logging.getLogger().setLevel(logging.INFO)
+    else:
+        logging.getLogger().setLevel(logging.WARNING)
     
-    # Print the final report to the console
-    print(result["report_content"])
+    fasta_path = args.input_fasta
+
+    # If no argument is provided, switch to interactive mode
+    if not fasta_path:
+        print(ATLAS_ASCII)
+        logging.warning("Welcome to the ATLAS analysis tool.")
+        logging.warning("This program will process a FASTA file and generate a taxonomic report.")
+        logging.warning("To proceed, please enter the path to your FASTA file.")
+        logging.warning("Example: data/raw/your_file.fasta\n")
+        input_path = input("Enter FASTA file path: ")
+        fasta_path = Path(input_path.strip())
+
+    if not fasta_path.is_file():
+        logging.error(f"\n[ERROR] File not found: {fasta_path}")
+        logging.error("Please check the path and try again.")
+        sys.exit(1)
+
+    logging.info(f"\nProcessing '{fasta_path}'...")
+    logging.info("This may take a few minutes, please wait...")
+
+    # Call the core analysis function from the predict.py module
+    result = run_analysis(
+        input_fasta_path=fasta_path,
+        report_name=args.report_name,
+        verbose=args.verbose
+    )
+
+    # Print the report from the returned dictionary
+    if result["status"] == "success":
+        print("\n" + result["report_content"])
+    else:
+        logging.error(f"\n[ERROR] An error occurred during the analysis:")
+        logging.error(f"  > {result['message']}")
+        sys.exit(1)

@@ -35,14 +35,13 @@ except ImportError:
     print("Please ensure you are running this script from the project's root directory.")
     sys.exit(1)
 
-# --- ASCII Art Header for "ATLAS" ---
+# --- ASCII Art Headers ---
 ATLAS_ASCII = r"""
-    ___   _____  _        ___   _____ 
-  / _ \ |_   _|| |      / _ \ /  ___|
- / /_\ \  | |  | |     / /_\ \\ `--. 
- |  _  |  | |  | |     |  _  | `--. \
- | | | |  | |  | |____ | | | |/\__/ /
- \_| |_/  \_/  \_____/ \_| |_/\____/ 
+    _    _____ _        _    ____  
+   / \  |_   _| |      / \  / ___| 
+  / _ \   | | | |     / _ \ \___ \ 
+ / ___ \  | | | |___ / ___ \ ___) |
+/_/   \_\ |_| |_____/_/   \_\____/ 
 
  A.T.L.A.S. Command-Line Interface
 ---------------------------------------

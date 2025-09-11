@@ -1,8 +1,0 @@
-# Additional Flask dependencies for ATLAS backend
-# Install these in your existing conda environment with:
-# conda run -n atlas pip install -r backend/flask_requirements.txt
-
-Flask==2.3.3
-Flask-CORS==4.0.0
-Werkzeug==2.3.7
-requests==2.31.0

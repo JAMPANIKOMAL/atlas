@@ -1,21 +1,19 @@
 import http.server
 import socketserver
 import json
-import base64
 import cgi
-import io
 import os
 from pathlib import Path
-import threading
 import sys
 
-# We need to import our core prediction script to use its functions
-sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
+# Append the src directory to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
 from predict_refactored import run_analysis
 
 # --- Configuration ---
 PORT = 8000
-ROOT_DIR = Path(__file__).parent.parent
+# The server now looks for index.html in the same directory as itself
+ROOT_DIR = Path(__file__).parent
 HTML_FILE_PATH = os.path.join(ROOT_DIR, 'index.html')
 TEMP_DIR = os.path.join(ROOT_DIR, 'temp')
 os.makedirs(TEMP_DIR, exist_ok=True)
@@ -100,6 +98,8 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 # --- Start the Server ---
 if __name__ == "__main__":
+    # Corrected path to the HTML file for serving
+    os.chdir(ROOT_DIR) 
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         print(f"ATLAS server started at http://localhost:{PORT}")
         httpd.serve_forever()

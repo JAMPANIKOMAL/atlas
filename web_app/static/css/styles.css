@@ -1,0 +1,687 @@
+@font-face {
+    font-family: 'Rejouice-Headline';
+    src: url('../font/Rejouice-Headline.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'NB-BOO';
+    src: url('../font/NB_BOO.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+.font-rejouice {
+    font-family: 'Rejouice-Headline', 'Inter', sans-serif;
+}
+
+.font-nb-boo {
+    font-family: 'NB-BOO', 'Inter', sans-serif;
+}
+
+.font-display {
+    font-family: 'Rejouice-Headline', 'Inter', sans-serif;
+}
+
+.font-accent {
+    font-family: 'NB-BOO', 'Inter', sans-serif;
+}
+
+.scroll-smooth {
+    scroll-behavior: smooth;
+}
+
+/* Legacy fade-in for compatibility */
+.fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: all 0.6s ease-out;
+}
+
+.fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.nav-link {
+    outline: none !important;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.nav-link:focus {
+    outline: none !important;
+    box-shadow: none !important;
+}
+
+.nav-link.active {
+    color: #06b6d4;
+    border-bottom: 2px solid #06b6d4;
+}
+
+.hero-gradient {
+    background: linear-gradient(135deg, #0f766e 0%, #06b6d4 100%);
+}
+
+/* Enhanced Card Hover Effects */
+.card-hover {
+    transition: all 0.3s ease;
+}
+
+.card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Feature Cards with Advanced Hover */
+.feature-card {
+    cursor: pointer;
+    border: 2px solid transparent;
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(15, 118, 110, 0.1), transparent);
+    transition: left 0.5s;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(15, 118, 110, 0.15);
+    border-color: rgba(15, 118, 110, 0.2);
+}
+
+.feature-card:hover::before {
+    left: 100%;
+}
+
+.feature-icon {
+    position: relative;
+    overflow: hidden;
+}
+
+.feature-card:hover .feature-icon {
+    transform: scale(1.1) rotate(5deg);
+    box-shadow: 0 10px 25px rgba(15, 118, 110, 0.3);
+}
+
+.feature-card:hover .feature-icon i {
+    animation: iconBounce 0.6s ease-in-out;
+}
+
+/* Process Cards with Enhanced Interactions */
+.process-card {
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+}
+
+.process-card::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(15, 118, 110, 0.05), rgba(6, 182, 212, 0.05));
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.process-card:hover {
+    transform: translateY(-12px) scale(1.03);
+    box-shadow: 0 30px 60px rgba(15, 118, 110, 0.2);
+    border-color: rgba(15, 118, 110, 0.3) !important;
+}
+
+.process-card:hover::after {
+    opacity: 1;
+}
+
+.icon-container:hover {
+    transform: scale(1.15) rotate(-5deg);
+    box-shadow: 0 15px 30px rgba(15, 118, 110, 0.4);
+}
+
+.process-icon {
+    transition: all 0.3s ease;
+}
+
+.process-card:hover .process-icon {
+    animation: processIconSpin 0.8s ease-in-out;
+}
+
+.step-badge {
+    background: linear-gradient(45deg, #0f766e, #06b6d4);
+}
+
+.process-card:hover .step-badge {
+    transform: scale(1.2);
+    animation: pulse 1.5s infinite;
+}
+
+/* Timeline Dots Animation */
+.timeline-dot {
+    position: relative;
+}
+
+.timeline-dot::before {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 0;
+    height: 0;
+    background: rgba(15, 118, 110, 0.3);
+    border-radius: 50%;
+    transition: all 0.3s ease;
+}
+
+.process-step:hover .timeline-dot::before {
+    width: 20px;
+    height: 20px;
+    animation: ripple 1s infinite;
+}
+
+/* Floating Image Effect */
+.floating-image {
+    animation: float 6s ease-in-out infinite;
+    transition: all 0.3s ease;
+}
+
+.floating-image:hover {
+    transform: scale(1.05) rotate(2deg);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+}
+
+/* Button Hover Effects */
+.btn-hover {
+    transition: all 0.3s ease;
+    position: relative;
+    overflow: hidden;
+}
+
+.btn-hover::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+    transition: left 0.5s;
+}
+
+.btn-hover:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 15px 30px rgba(6, 182, 212, 0.4);
+}
+
+.btn-hover:hover::before {
+    left: 100%;
+}
+
+/* Tooltip Styles */
+.tooltip {
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(15, 118, 110, 0.95);
+    color: white;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    white-space: nowrap;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+    z-index: 1000;
+    backdrop-filter: blur(10px);
+}
+
+.tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: rgba(15, 118, 110, 0.95);
+}
+
+.process-card:hover .tooltip {
+    opacity: 1;
+    visibility: visible;
+    transform: translateX(-50%) translateY(-5px);
+}
+
+/* Counter Animation */
+.counter {
+    transition: all 0.3s ease;
+}
+
+/* Keyframe Animations */
+@keyframes iconBounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+}
+
+@keyframes processIconSpin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+@keyframes ripple {
+    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+    100% { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+}
+
+@keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+}
+
+@keyframes shimmer {
+    0% { transform: translateX(-100%); }
+    100% { transform: translateX(100%); }
+}
+
+/* Progress Bar Styles */
+#process-progress {
+    background: linear-gradient(90deg, #0f766e, #06b6d4, #0f766e);
+    background-size: 200% 100%;
+    animation: progressShimmer 2s linear infinite;
+}
+
+@keyframes progressShimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+}
+
+/* Active Step Highlighting */
+.process-step.active .process-card {
+    border-color: #0f766e !important;
+    box-shadow: 0 0 30px rgba(15, 118, 110, 0.3);
+}
+
+.process-step.active .step-badge {
+    animation: pulse 2s infinite;
+}
+
+.process-step.active .timeline-dot {
+    animation: pulse 2s infinite;
+    box-shadow: 0 0 20px rgba(15, 118, 110, 0.5);
+}
+
+/* Loading Screen Styles */
+#loading-screen {
+    transition: opacity 0.5s ease-out, visibility 0.5s ease-out;
+}
+
+#loading-screen.fade-out {
+    opacity: 0;
+    visibility: hidden;
+}
+
+@keyframes loadingBar {
+    0%, 100% { transform: translateX(-100%); }
+    50% { transform: translateX(0%); }
+}
+
+/* Interactive Timeline Styles */
+.timeline-step {
+    position: relative;
+    padding: 2rem 0;
+}
+
+.step-circle {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    backdrop-filter: blur(10px);
+}
+
+.step-circle:hover {
+    transform: translate(-50%, -50%) scale(1.1);
+    box-shadow: 0 20px 40px rgba(15, 118, 110, 0.3);
+}
+
+.step-circle.active {
+    transform: translate(-50%, -50%) scale(1.15);
+    box-shadow: 0 0 30px rgba(15, 118, 110, 0.6), 0 0 60px rgba(15, 118, 110, 0.3);
+    animation: stepGlow 2s ease-in-out infinite alternate;
+}
+
+.step-icon {
+    transition: all 0.3s ease;
+}
+
+.step-circle:hover .step-icon {
+    transform: scale(1.2) rotate(10deg);
+}
+
+.timeline-content {
+    position: relative;
+}
+
+.timeline-content > div {
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.timeline-content:hover > div {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 25px 50px rgba(0, 0, 0, 0.15);
+}
+
+.timeline-media {
+    position: relative;
+    overflow: hidden;
+}
+
+.timeline-media:hover {
+    transform: scale(1.02);
+}
+
+.timeline-media img {
+    transition: all 0.5s ease;
+}
+
+.timeline-media:hover img {
+    transform: scale(1.1);
+}
+
+/* Timeline Tracker Animation */
+#timeline-tracker {
+    box-shadow: 0 0 20px rgba(15, 118, 110, 0.8), 0 0 40px rgba(15, 118, 110, 0.4);
+    animation: trackerPulse 2s ease-in-out infinite;
+}
+
+/* Active Step Highlighting */
+.timeline-step.active .step-circle {
+    animation: stepGlow 2s ease-in-out infinite alternate;
+}
+
+.timeline-step.active .timeline-content > div {
+    box-shadow: 0 0 30px rgba(15, 118, 110, 0.2);
+    border-color: rgba(15, 118, 110, 0.3);
+}
+
+/* Enhanced Shadow Effects */
+.shadow-3xl {
+    box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Gradient Text Animation */
+.bg-clip-text {
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Timeline Keyframe Animations */
+@keyframes stepGlow {
+    0% {
+        box-shadow: 0 0 20px rgba(15, 118, 110, 0.4), 0 0 40px rgba(15, 118, 110, 0.2);
+    }
+    100% {
+        box-shadow: 0 0 30px rgba(15, 118, 110, 0.8), 0 0 60px rgba(15, 118, 110, 0.4);
+    }
+}
+
+@keyframes trackerPulse {
+    0%, 100% {
+        transform: translate(-50%, -50%) scale(1);
+        box-shadow: 0 0 20px rgba(15, 118, 110, 0.8);
+    }
+    50% {
+        transform: translate(-50%, -50%) scale(1.2);
+        box-shadow: 0 0 30px rgba(15, 118, 110, 1), 0 0 60px rgba(15, 118, 110, 0.6);
+    }
+}
+
+@keyframes slideInLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+@keyframes slideInRight {
+    from {
+        opacity: 0;
+        transform: translateX(100px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Timeline Responsive Design */
+@media (max-width: 768px) {
+    .timeline-step {
+        padding: 1rem 0;
+    }
+    
+    .step-circle {
+        position: relative !important;
+        left: auto !important;
+        transform: none !important;
+        margin: 0 auto 2rem auto;
+    }
+    
+    .timeline-content,
+    .timeline-media {
+        margin-bottom: 2rem;
+    }
+    
+    .space-y-32 > * + * {
+        margin-top: 4rem;
+    }
+}
+
+/* Enhanced Button Animations */
+.btn-pulse {
+    animation: buttonPulse 2s infinite;
+}
+
+@keyframes buttonPulse {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    border: 3px solid rgba(15, 118, 110, 0.1);
+    border-top: 3px solid #0f766e;
+    border-radius: 50%;
+    width: 24px;
+    height: 24px;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+/* Smooth Transitions for Form Elements */
+input, textarea, select {
+    transition: all 0.3s ease;
+}
+
+input:focus, textarea:focus, select:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(15, 118, 110, 0.15);
+}
+
+/* Enhanced Hover Effects for Cards */
+.interactive-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.interactive-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+    transition: left 0.6s;
+}
+
+.interactive-card:hover::before {
+    left: 100%;
+}
+
+.interactive-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(15, 118, 110, 0.2);
+}
+
+/* Progress Bar Enhancements */
+.progress-bar {
+    background: linear-gradient(90deg, #0f766e, #06b6d4);
+    background-size: 200% 100%;
+    animation: progressFlow 2s ease-in-out infinite;
+}
+
+@keyframes progressFlow {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+}
+
+/* Notification Animations */
+.notification-slide-in {
+    animation: slideInFromRight 0.5s ease-out;
+}
+
+@keyframes slideInFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Icon Bounce Animation */
+.icon-bounce:hover {
+    animation: iconBounceEffect 0.6s ease-in-out;
+}
+
+@keyframes iconBounceEffect {
+    0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+    40% { transform: translateY(-10px); }
+    60% { transform: translateY(-5px); }
+}
+
+/* Accessibility Improvements */
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+}
+
+/* Focus indicators for better accessibility */
+*:focus {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+}
+
+button:focus,
+input:focus,
+textarea:focus,
+select:focus,
+[role="button"]:focus {
+    outline: 2px solid #0f766e;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.1);
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+    .text-gray-600 {
+        color: #374151 !important;
+    }
+    
+    .border-gray-300 {
+        border-color: #6b7280 !important;
+    }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Skip link for keyboard navigation */
+.skip-link {
+    position: absolute;
+    top: -40px;
+    left: 6px;
+    background: #0f766e;
+    color: white;
+    padding: 8px;
+    text-decoration: none;
+    border-radius: 4px;
+    z-index: 1000;
+}
+
+.skip-link:focus {
+    top: 6px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+    .feature-card:hover,
+    .process-card:hover,
+    .interactive-card:hover {
+        transform: translateY(-5px) scale(1.01);
+    }
+    
+    .floating-image {
+        animation: none;
+    }
+}

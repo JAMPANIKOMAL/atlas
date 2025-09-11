@@ -51,13 +51,37 @@ If you see this output, your environment is correctly configured for GPU-acceler
 
 ## Option 2: CPU-Only Environment (Universal Compatibility)
 
+This setup is for users without an NVIDIA GPU or those who prefer a simpler installation process. The CPU-only environment uses TensorFlow-CPU and provides good performance for inference and smaller-scale training tasks.
+
+### Step 1: Create the CPU Environment
+
+You will need the `environment-cpu.yml` file located in the project's root directory.
+
+Open a Conda terminal, navigate to the project root, and run the following command:
+
+```bash
+conda env create -f environment-cpu.yml
+```
+
+This will create an environment named `atlas-cpu` with all the necessary Python packages optimized for CPU usage.
+
+### Step 2: Activate the Environment
+
+Activate the newly created environment:
+
+```bash
 conda activate atlas-cpu
+```
+
+### Step 3: Verify the CPU Installation
 
 To confirm that the environment is working correctly, run the following command:
 
+```bash
 python -c "import tensorflow as tf; print(f'TensorFlow version {tf.__version__} is installed.')"
+```
 
-Expected Successful Output:
-You should see a message confirming the TensorFlow version, for example: TensorFlow version 2.10.0 is installed.
+**Expected Successful Output:**
+You should see a message confirming the TensorFlow version, for example: `TensorFlow version 2.10.0 is installed.`
 
-Your CPU-only environment is now ready.
+Your CPU-only environment is now ready and can be used to run all ATLAS pipelines.

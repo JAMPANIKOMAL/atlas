@@ -35,13 +35,13 @@ except ImportError:
     print("Please ensure you are running this script from the project's root directory.")
     sys.exit(1)
 
-# --- ASCII Art Headers ---
+# --- ASCII Art Header for "ATLAS" ---
 ATLAS_ASCII = r"""
-    _    _____ _        _    ____  
-   / \  |_   _| |      / \  / ___| 
-  / _ \   | | | |     / _ \ \___ \ 
- / ___ \  | | | |___ / ___ \ ___) |
-/_/   \_\ |_| |_____/_/   \_\____/ 
+    _  _____ _        _    ____  
+   / \|_   _| |      / \  / ___| 
+  / _ \ | | | |     / _ \ \___ \ 
+ / ___ \| | | |___ / ___ \ ___) |
+/_/   \_\_| |_____/_/   \_\____/ 
 
  A.T.L.A.S. Command-Line Interface
 ---------------------------------------
@@ -77,6 +77,9 @@ def main():
     args = parser.parse_args()
     fasta_path = args.input_fasta
 
+    # Print ASCII art and welcome message regardless of mode
+    print(ATLAS_ASCII)
+
     # Set logging level based on the --verbose flag
     if args.verbose:
         logging.getLogger().setLevel(logging.INFO)
@@ -85,7 +88,6 @@ def main():
 
     # If no argument is provided, switch to interactive mode
     if not fasta_path:
-        print(ATLAS_ASCII)
         logging.warning("Welcome to the ATLAS analysis tool.")
         logging.warning("This program will process a FASTA file and generate a taxonomic report.")
         logging.warning("To proceed, please enter the path to your FASTA file.")
@@ -102,7 +104,6 @@ def main():
     logging.info("This may take a few minutes, please wait...")
 
     # Call the core analysis function from the predict.py module
-    # Pass the report_name and verbosity flag
     result = run_analysis(
         input_fasta_path=fasta_path,
         report_name=args.report_name,

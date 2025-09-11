@@ -202,6 +202,10 @@ AAGCTT..."></textarea>
         
         const createCharts = (data) => {
             if (!data || data.length === 0) {
+                // Clear any existing charts if no data is available
+                if (barChartInstance) barChartInstance.destroy();
+                if (pieChartInstance) pieChartInstance.destroy();
+                if (doughnutChartInstance) doughnutChartInstance.destroy();
                 return;
             }
 

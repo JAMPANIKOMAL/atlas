@@ -6,9 +6,9 @@ import os
 from pathlib import Path
 import sys
 
-# Append the src directory to the Python path
-sys.path.append(os.path.join(os.path.dirname(__file__), 'src'))
-from predict_refactored import run_analysis
+# Add the project root to the Python path
+sys.path.append(os.path.join(os.path.dirname(__file__)))
+from src.predict_refactored import run_analysis
 
 # --- Configuration ---
 PORT = 8000
@@ -91,6 +91,7 @@ class MyHandler(http.server.SimpleHTTPRequestHandler):
 
 # --- Start the Server ---
 if __name__ == "__main__":
+    # Correct pathing to handle file serving from the root directory
     os.chdir(ROOT_DIR) 
     with socketserver.TCPServer(("", PORT), MyHandler) as httpd:
         print(f"ATLAS server started at http://localhost:{PORT}")

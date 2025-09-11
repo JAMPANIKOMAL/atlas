@@ -1,21 +1,11 @@
 # =============================================================================
-# ATLAS - MASTER PREDICTION SCRIPT
+# ATLAS - MASTER PREDICTION SCRIPT (REFRACTORED FOR WEB APP)
 # =============================================================================
-# This is the main entry point for the ATLAS system. It orchestrates the
-# entire workflow, combining the "Filter" and "Explorer" pipelines to generate
-# a comprehensive biodiversity report from a user-provided FASTA file.
+# This is the main entry point for the ATLAS system, now refactored to be
+# callable as a function from a web application.
 #
-# WORKFLOW:
-# 1.  Load all four trained "Filter" models (16S, 18S, COI, ITS).
-# 2.  Process an input FASTA file sequence by sequence.
-# 3.  For each sequence, attempt to classify it with each Filter model.
-# 4.  If a model makes a high-confidence prediction, the result is stored.
-# 5.  If no model can classify the sequence, it's added to a list of
-#     "unclassified" sequences.
-# 6.  The unclassified sequences are passed to the "Explorer" pipeline, which
-#     runs its three scripts (vectorize, cluster, interpret) in order.
-# 7.  The final report combines the classified results from the Filter with the
-#     discovery report from the Explorer.
+# The original logic has been moved into the `run_analysis` function.
+#
 # =============================================================================
 
 # --- Imports ---
@@ -30,17 +20,17 @@ import sys
 from collections import Counter
 from tensorflow.keras.models import load_model
 from scipy.sparse import csc_matrix
-# --- FIX: Add the missing import for the progress bar ---
 from tqdm import tqdm
+import io
+import os
+import shutil
 
 # --- Configuration ---
-try:
-    project_root = Path(__file__).parent.parent
-except NameError:
-    project_root = Path.cwd()
-
+project_root = Path(__file__).parent.parent
 MODELS_DIR = project_root / "models"
 SRC_DIR = project_root / "src"
+REPORTS_DIR = project_root / "reports"
+REPORTS_DIR.mkdir(parents=True, exist_ok=True)
 
 # --- Helper Function for K-mer Counting ---
 def get_kmer_counts(sequence, k):
@@ -71,25 +61,21 @@ class TaxonClassifier:
                 self.vectorizer = pickle.load(f)
             with open(MODELS_DIR / f"{self.name}_genus_label_encoder.pkl", 'rb') as f:
                 self.label_encoder = pickle.load(f)
-        except FileNotFoundError:
-            print(f"[ERROR] Artifacts for {self.name} model not found. Please ensure all models are trained.")
-            sys.exit(1)
+        except FileNotFoundError as e:
+            # Re-raise with a more informative message for the web app
+            raise FileNotFoundError(f"[ERROR] Artifacts for {self.name} model not found. Please ensure all models are trained.") from e
 
     def predict(self, sequence, confidence_threshold=0.8):
         """Predicts the taxon for a single sequence."""
         kmer_counts = get_kmer_counts(sequence, self.kmer_size)
         
-        # We need to handle the case where a sequence has no valid k-mers
         if not kmer_counts:
             return None, 0.0
 
-        # The vectorizer expects a list of dictionaries
         vectorized_sequence = self.vectorizer.transform([kmer_counts])
         
-        # The model makes a prediction
         prediction_probabilities = self.model.predict(vectorized_sequence, verbose=0)[0]
         
-        # Get the highest probability and its corresponding class index
         top_prob = np.max(prediction_probabilities)
         top_class_index = np.argmax(prediction_probabilities)
         
@@ -100,16 +86,18 @@ class TaxonClassifier:
         return None, top_prob
 
 # =============================================================================
-# --- Main Script Execution ---
+# --- Main Analysis Function ---
 # =============================================================================
-if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="ATLAS: AI Taxonomic Learning & Analysis System")
-    parser.add_argument(
-        '--input_fasta', type=Path, required=True,
-        help="Path to the input FASTA file for analysis."
-    )
-    args = parser.parse_args()
-
+def run_analysis(input_fasta_path):
+    """
+    Main analysis pipeline.
+    
+    Args:
+        input_fasta_path (str): Path to the input FASTA file.
+        
+    Returns:
+        dict: A dictionary containing the analysis results.
+    """
     # --- 1. Load All Filter Models ---
     print("--- Step 1: Loading All 'Filter' AI Models ---")
     classifiers = [
@@ -121,9 +109,12 @@ if __name__ == "__main__":
     print("  - All models loaded successfully.")
 
     # --- 2. Process Input FASTA ---
-    print(f"\n--- Step 2: Processing Input File: {args.input_fasta.name} ---")
-    input_sequences = list(SeqIO.parse(args.input_fasta, "fasta"))
-    
+    print(f"\n--- Step 2: Processing Input File: {Path(input_fasta_path).name} ---")
+    try:
+        input_sequences = list(SeqIO.parse(input_fasta_path, "fasta"))
+    except Exception as e:
+        return {"error": f"Failed to parse FASTA file: {e}"}
+        
     classified_results = Counter()
     unclassified_sequences = []
 
@@ -135,7 +126,7 @@ if __name__ == "__main__":
             if label:
                 classified_results[label] += 1
                 prediction_made = True
-                break # Move to the next sequence once classified
+                break
         
         if not prediction_made:
             unclassified_sequences.append(seq_record)
@@ -143,17 +134,15 @@ if __name__ == "__main__":
     print(f"  - Classification complete.")
     print(f"    - Known organisms identified: {sum(classified_results.values())}")
     print(f"    - Unclassified sequences: {len(unclassified_sequences)}")
-
+    
     # --- 3. Run Explorer Pipeline (if necessary) ---
     explorer_report_content = "No unclassified sequences to explore."
     if unclassified_sequences:
         print("\n--- Step 3: Starting 'Explorer' AI Pipeline ---")
         
-        # Save unclassified sequences to a temporary file
-        temp_fasta_path = project_root / "temp_unclassified.fasta"
+        temp_fasta_path = REPORTS_DIR / "temp_unclassified.fasta"
         SeqIO.write(unclassified_sequences, temp_fasta_path, "fasta")
         
-        # Run the explorer scripts in sequence
         explorer_scripts = [
             "01_vectorize_sequences.py",
             "02_cluster_sequences.py",
@@ -163,36 +152,30 @@ if __name__ == "__main__":
         for script in explorer_scripts:
             script_path = SRC_DIR / "pipeline_explorer" / script
             print(f"  - Running {script}...")
-            # Use subprocess to run each script and wait for it to complete
             subprocess.run(
                 [sys.executable, str(script_path), "--input_fasta", str(temp_fasta_path)],
                 capture_output=True, text=True, check=True
             )
         
-        # Read the explorer's final report
         explorer_report_path = project_root / "explorer_final_report.txt"
         if explorer_report_path.exists():
             with open(explorer_report_path, 'r') as f:
                 explorer_report_content = f.read()
+            explorer_report_path.unlink() # Clean up explorer report
         
-        # Clean up temporary files
-        temp_fasta_path.unlink()
-        explorer_report_path.unlink()
+        temp_fasta_path.unlink() # Clean up temp FASTA file
         print("  - Explorer pipeline complete.")
 
     # --- 4. Generate Final Report ---
     print("\n--- Step 4: Generating Final Biodiversity Report ---")
-    # --- FIX: Create and use a dedicated reports directory ---
-    REPORTS_DIR = project_root / "reports"
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
-    FINAL_REPORT_PATH = REPORTS_DIR / f"ATLAS_REPORT_{args.input_fasta.stem}.txt"
+    final_report_path = REPORTS_DIR / f"ATLAS_REPORT_{Path(input_fasta_path).stem}.txt"
     
-    with open(FINAL_REPORT_PATH, "w") as f:
+    with open(final_report_path, "w") as f:
         f.write("="*60 + "\n")
         f.write("       ATLAS: AI Taxonomic Learning & Analysis System\n")
         f.write("                         FINAL REPORT\n")
         f.write("="*60 + "\n\n")
-        f.write(f"Input File: {args.input_fasta.name}\n")
+        f.write(f"Input File: {Path(input_fasta_path).name}\n")
         f.write(f"Total Sequences Analyzed: {len(input_sequences)}\n\n")
 
         f.write("-" * 30 + "\n")
@@ -208,8 +191,31 @@ if __name__ == "__main__":
         f.write("Part 2: Novel Taxa Discovery (Explorer Results)\n")
         f.write("-" * 30 + "\n\n")
         f.write(explorer_report_content)
+    
+    print(f"  - Report saved successfully to: {final_report_path}")
 
-    print(f"  - Report saved successfully to: {FINAL_REPORT_PATH}")
+    # Return a summary for the web app
+    return {
+        "status": "success",
+        "report_path": str(final_report_path),
+        "total_sequences": len(input_sequences),
+        "classified": sum(classified_results.values()),
+        "unclassified": len(unclassified_sequences),
+        "classified_results": {k: v for k, v in classified_results.items()},
+        "explorer_report": explorer_report_content
+    }
+
+# =============================================================================
+# --- Original script's main execution block (now a simple placeholder) ---
+# This block is for running the script directly from the command line.
+# =============================================================================
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser(description="ATLAS: AI Taxonomic Learning & Analysis System")
+    parser.add_argument(
+        '--input_fasta', type=Path, required=True,
+        help="Path to the input FASTA file for analysis."
+    )
+    args = parser.parse_args()
+    
+    run_analysis(args.input_fasta)
     print("\n[SUCCESS] ATLAS analysis complete.")
-
-

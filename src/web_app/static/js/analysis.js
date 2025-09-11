@@ -110,6 +110,175 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    async function startAnalysis() {
+        if (startAnalysisBtn.disabled) return;
+        
+        const analysisMode = document.querySelector('input[name="analysisMode"]:checked').value;
+        let sequences = sequenceInput.value.trim();
+        
+        if (fastaFile.files.length > 0) {
+            const file = fastaFile.files[0];
+            sequences = await file.text();
+        }
+        
+        if (!sequences) {
+            alert("Please provide sequences for analysis.");
+            return;
+        }
+
+        analysisProgress.classList.remove('hidden');
+        analysisProgress.scrollIntoView({ behavior: 'smooth' });
+        
+        startAnalysisBtn.disabled = true;
+        startAnalysisBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Processing...';
+        
+        // Simulate progress bar until backend responds
+        let progress = 0;
+        const progressElement = document.getElementById('processingProgress');
+        const interval = setInterval(() => {
+            progress += 1;
+            if (progress < 95) progressElement.textContent = `${progress}%`;
+        }, 50);
+
+        try {
+            const response = await fetch('/api/analyze', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ sequences: sequences, analysisMode: analysisMode }),
+            });
+            
+            clearInterval(interval);
+            
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(errorData.error || 'Unknown error');
+            }
+            
+            const data = await response.json();
+            
+            // Call functions to update UI with final results
+            completeAnalysis(data);
+
+        } catch (error) {
+            clearInterval(interval);
+            console.error('Error during analysis:', error);
+            alert(`Analysis failed: ${error.message}`);
+            // Reset UI on error
+            startAnalysisBtn.disabled = false;
+            startAnalysisBtn.innerHTML = '<i class="fas fa-play mr-2" aria-hidden="true"></i>Start Analysis';
+            analysisProgress.classList.add('hidden');
+        }
+    }
+
+    function completeAnalysis(data) {
+        // This function would now use the data from the server response
+        const progressElement = document.getElementById('processingProgress');
+        progressElement.textContent = '100%';
+        progressElement.classList.remove('text-blue-600');
+        progressElement.classList.add('text-green-600');
+        
+        // Update all progress steps to complete
+        document.querySelectorAll('.bg-gray-50').forEach(step => {
+            step.classList.remove('bg-gray-50', 'opacity-50');
+            step.classList.add('bg-green-50');
+            const icon = step.querySelector('i');
+            icon.className = 'fas fa-check text-white text-sm';
+            const progressText = step.querySelector('.font-semibold');
+            progressText.textContent = progressText.textContent.replace('Pending', 'Complete').replace('Processing', 'Complete').replace('Generating', 'Complete');
+        });
+        
+        // Finalize UI
+        showResults(data);
+    }
+    
+    function showResults(data) {
+        // The URL for the generated report is now provided by the backend
+        const reportUrl = `/reports/${Path(data.report_path).basename()}`;
+        
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-check-circle mr-3"></i>
+                <div>
+                    <div class="font-semibold">Analysis Complete!</div>
+                    <div class="text-sm opacity-90">Results are ready for download</div>
+                </div>
+            </div>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        const progressSection = document.querySelector('#analysisProgress .bg-white');
+        const downloadButton = document.createElement('div');
+        downloadButton.className = 'mt-8 text-center';
+        downloadButton.innerHTML = `
+            <a href="${reportUrl}" target="_blank" class="bg-gradient-to-r from-primary to-accent text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                <i class="fas fa-download mr-2"></i>
+                Download Results
+            </a>
+        `;
+        progressSection.appendChild(downloadButton);
+        
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                document.body.removeChild(notification);
+            }, 300);
+        }, 5000);
+    }
+    
+    // ... (other helper functions remain unchanged)
+
+    function updateCharCount() {
+        const count = sequenceInput.value.length;
+        charCount.textContent = `${count.toLocaleString()} characters`;
+    }
+    
+    function formatFileSize(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function handleTextInput() {
+        updateCharCount();
+        validateInput();
+        
+        // Clear file input when text is entered
+        if (sequenceInput.value.trim()) {
+            fastaFile.value = '';
+            fileInfo.classList.add('hidden');
+        }
+    }
+
+    function updateCharCount() {
+        const count = sequenceInput.value.length;
+        charCount.textContent = `${count.toLocaleString()} characters`;
+    }
+
+    function validateInput() {
+        const hasFile = fastaFile.files.length > 0;
+        const hasText = sequenceInput.value.trim().length > 0;
+        
+        startAnalysisBtn.disabled = !(hasFile || hasText);
+        
+        if (hasFile || hasText) {
+            startAnalysisBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            startAnalysisBtn.classList.add('hover:shadow-lg', 'transform', 'hover:-translate-y-1');
+        } else {
+            startAnalysisBtn.classList.add('opacity-50', 'cursor-not-allowed');
+            startAnalysisBtn.classList.remove('hover:shadow-lg', 'transform', 'hover:-translate-y-1');
+        }
+    }
+
 function startAnalysis() {
     if (startAnalysisBtn.disabled) return;
     

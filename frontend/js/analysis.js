@@ -124,134 +124,267 @@ document.addEventListener('DOMContentLoaded', function() {
         startAnalysisBtn.disabled = true;
         startAnalysisBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Processing...';
         
-        // Simulate analysis progress
-        simulateAnalysis();
+        // Upload data and start real analysis
+        uploadAndAnalyze(analysisMode);
     }
 
-    function simulateAnalysis() {
-        let progress = 45;
-        const progressElement = document.getElementById('processingProgress');
-        
-        const interval = setInterval(() => {
-            progress += Math.random() * 10;
-            if (progress > 100) progress = 100;
+    async function uploadAndAnalyze(analysisMode) {
+        try {
+            const formData = new FormData();
             
-            progressElement.textContent = `${Math.floor(progress)}%`;
-            
-            if (progress >= 100) {
-                clearInterval(interval);
-                completeProcessing();
+            // Add file or text sequences
+            if (fastaFile.files.length > 0) {
+                formData.append('file', fastaFile.files[0]);
+            } else if (sequenceInput.value.trim()) {
+                formData.append('sequences', sequenceInput.value.trim());
             }
-        }, 500);
+            
+            formData.append('analysis_mode', analysisMode);
+            
+            // Upload data
+            const uploadResponse = await fetch('http://localhost:5000/api/upload', {
+                method: 'POST',
+                body: formData
+            });
+            
+            if (!uploadResponse.ok) {
+                const error = await uploadResponse.json();
+                throw new Error(error.error || 'Upload failed');
+            }
+            
+            const uploadResult = await uploadResponse.json();
+            const jobId = uploadResult.job_id;
+            
+            // Start analysis
+            const analyzeResponse = await fetch(`http://localhost:5000/api/analyze/${jobId}`, {
+                method: 'POST'
+            });
+            
+            if (!analyzeResponse.ok) {
+                const error = await analyzeResponse.json();
+                throw new Error(error.error || 'Analysis failed to start');
+            }
+            
+            // Start monitoring progress
+            monitorProgress(jobId);
+            
+        } catch (error) {
+            console.error('Analysis error:', error);
+            showError(error.message);
+            resetAnalysisButton();
+        }
     }
 
-    function completeProcessing() {
-        // Update processing step
+    async function monitorProgress(jobId) {
+        const checkInterval = setInterval(async () => {
+            try {
+                const response = await fetch(`http://localhost:5000/api/status/${jobId}`);
+                
+                if (!response.ok) {
+                    throw new Error('Failed to check status');
+                }
+                
+                const status = await response.json();
+                updateProgressDisplay(status);
+                
+                if (status.status === 'completed') {
+                    clearInterval(checkInterval);
+                    await loadResults(jobId);
+                } else if (status.status === 'error') {
+                    clearInterval(checkInterval);
+                    showError(status.error || 'Analysis failed');
+                    resetAnalysisButton();
+                }
+            } catch (error) {
+                console.error('Status check error:', error);
+                clearInterval(checkInterval);
+                showError('Failed to monitor analysis progress');
+                resetAnalysisButton();
+            }
+        }, 2000); // Check every 2 seconds
+    }
+
+    function updateProgressDisplay(status) {
+        const progress = status.progress || 0;
+        const currentStep = status.current_step || '';
+        
+        // Update progress based on current step
+        if (currentStep.includes('Processing')) {
+            updateProcessingStep(progress);
+        } else if (currentStep.includes('AI') || currentStep.includes('Model')) {
+            completeProcessingStep();
+            updateAIStep(progress);
+        } else if (currentStep.includes('Results') || currentStep.includes('Generating')) {
+            completeProcessingStep();
+            completeAIStep();
+            updateResultsStep(progress);
+        }
+    }
+
+    function updateProcessingStep(progress) {
+        const processingStep = document.querySelector('.bg-blue-50') || document.querySelectorAll('.bg-gray-50')[2];
+        if (processingStep && processingStep.classList.contains('bg-gray-50')) {
+            processingStep.classList.remove('bg-gray-50', 'opacity-50');
+            processingStep.classList.add('bg-blue-50');
+            
+            const icon = processingStep.querySelector('.bg-gray-300');
+            if (icon) {
+                icon.classList.remove('bg-gray-300');
+                icon.classList.add('bg-blue-500', 'animate-spin');
+                icon.innerHTML = '<i class="fas fa-spinner text-white text-sm"></i>';
+            }
+        }
+        
+        const progressElement = document.getElementById('processingProgress');
+        if (progressElement) {
+            progressElement.textContent = `${Math.floor(progress)}%`;
+            progressElement.classList.remove('text-gray-500');
+            progressElement.classList.add('text-blue-600');
+        }
+    }
+
+    function completeProcessingStep() {
         const processingStep = document.querySelector('.bg-blue-50');
-        processingStep.classList.remove('bg-blue-50');
-        processingStep.classList.add('bg-green-50');
-        
-        const processingIcon = processingStep.querySelector('.bg-blue-500');
-        processingIcon.classList.remove('bg-blue-500', 'animate-spin');
-        processingIcon.classList.add('bg-green-500');
-        processingIcon.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
-        
-        const processingProgress = processingStep.querySelector('#processingProgress');
-        processingProgress.textContent = '100%';
-        processingProgress.classList.remove('text-blue-600');
-        processingProgress.classList.add('text-green-600');
-        
-        // Start AI analysis
-        setTimeout(() => {
-            startAIAnalysis();
-        }, 1000);
+        if (processingStep) {
+            processingStep.classList.remove('bg-blue-50');
+            processingStep.classList.add('bg-green-50');
+            
+            const icon = processingStep.querySelector('.bg-blue-500');
+            if (icon) {
+                icon.classList.remove('bg-blue-500', 'animate-spin');
+                icon.classList.add('bg-green-500');
+                icon.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
+            }
+            
+            const progress = processingStep.querySelector('.text-blue-600');
+            if (progress) {
+                progress.textContent = '100%';
+                progress.classList.remove('text-blue-600');
+                progress.classList.add('text-green-600');
+            }
+        }
     }
 
-    function startAIAnalysis() {
+    function updateAIStep(progress) {
         const aiStep = document.querySelectorAll('.bg-gray-50')[1];
-        aiStep.classList.remove('bg-gray-50', 'opacity-50');
-        aiStep.classList.add('bg-purple-50');
-        
-        const aiIcon = aiStep.querySelector('.bg-gray-300');
-        aiIcon.classList.remove('bg-gray-300');
-        aiIcon.classList.add('bg-purple-500', 'animate-pulse');
-        
-        const aiProgress = aiStep.querySelector('.text-gray-500');
-        aiProgress.textContent = 'Processing...';
-        aiProgress.classList.remove('text-gray-500');
-        aiProgress.classList.add('text-purple-600');
-        
-        // Complete AI analysis after delay
-        setTimeout(() => {
-            completeAIAnalysis();
-        }, 3000);
+        if (aiStep) {
+            aiStep.classList.remove('bg-gray-50', 'opacity-50');
+            aiStep.classList.add('bg-purple-50');
+            
+            const icon = aiStep.querySelector('.bg-gray-300');
+            if (icon) {
+                icon.classList.remove('bg-gray-300');
+                icon.classList.add('bg-purple-500', 'animate-pulse');
+                icon.innerHTML = '<i class="fas fa-brain text-white text-sm"></i>';
+            }
+            
+            const progressText = aiStep.querySelector('.text-gray-500');
+            if (progressText) {
+                progressText.textContent = `${Math.floor(progress)}%`;
+                progressText.classList.remove('text-gray-500');
+                progressText.classList.add('text-purple-600');
+            }
+        }
     }
 
-    function completeAIAnalysis() {
-        const aiStep = document.querySelectorAll('.bg-purple-50')[0];
-        aiStep.classList.remove('bg-purple-50');
-        aiStep.classList.add('bg-green-50');
-        
-        const aiIcon = aiStep.querySelector('.bg-purple-500');
-        aiIcon.classList.remove('bg-purple-500', 'animate-pulse');
-        aiIcon.classList.add('bg-green-500');
-        aiIcon.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
-        
-        const aiProgress = aiStep.querySelector('.text-purple-600');
-        aiProgress.textContent = '100%';
-        aiProgress.classList.remove('text-purple-600');
-        aiProgress.classList.add('text-green-600');
-        
-        // Start results generation
-        setTimeout(() => {
-            startResultsGeneration();
-        }, 1000);
+    function completeAIStep() {
+        const aiStep = document.querySelector('.bg-purple-50');
+        if (aiStep) {
+            aiStep.classList.remove('bg-purple-50');
+            aiStep.classList.add('bg-green-50');
+            
+            const icon = aiStep.querySelector('.bg-purple-500');
+            if (icon) {
+                icon.classList.remove('bg-purple-500', 'animate-pulse');
+                icon.classList.add('bg-green-500');
+                icon.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
+            }
+            
+            const progress = aiStep.querySelector('.text-purple-600');
+            if (progress) {
+                progress.textContent = '100%';
+                progress.classList.remove('text-purple-600');
+                progress.classList.add('text-green-600');
+            }
+        }
     }
 
-    function startResultsGeneration() {
+    function updateResultsStep(progress) {
         const resultsStep = document.querySelectorAll('.bg-gray-50')[0];
-        resultsStep.classList.remove('bg-gray-50', 'opacity-50');
-        resultsStep.classList.add('bg-blue-50');
-        
-        const resultsIcon = resultsStep.querySelector('.bg-gray-300');
-        resultsIcon.classList.remove('bg-gray-300');
-        resultsIcon.classList.add('bg-blue-500', 'animate-spin');
-        resultsIcon.innerHTML = '<i class="fas fa-spinner text-white text-sm"></i>';
-        
-        const resultsProgress = resultsStep.querySelector('.text-gray-500');
-        resultsProgress.textContent = 'Generating...';
-        resultsProgress.classList.remove('text-gray-500');
-        resultsProgress.classList.add('text-blue-600');
-        
-        // Complete results generation
-        setTimeout(() => {
-            completeAnalysis();
-        }, 2000);
+        if (resultsStep) {
+            resultsStep.classList.remove('bg-gray-50', 'opacity-50');
+            resultsStep.classList.add('bg-blue-50');
+            
+            const icon = resultsStep.querySelector('.bg-gray-300');
+            if (icon) {
+                icon.classList.remove('bg-gray-300');
+                icon.classList.add('bg-blue-500', 'animate-spin');
+                icon.innerHTML = '<i class="fas fa-spinner text-white text-sm"></i>';
+            }
+            
+            const progressText = resultsStep.querySelector('.text-gray-500');
+            if (progressText) {
+                progressText.textContent = `${Math.floor(progress)}%`;
+                progressText.classList.remove('text-gray-500');
+                progressText.classList.add('text-blue-600');
+            }
+        }
     }
 
-    function completeAnalysis() {
-        const resultsStep = document.querySelector('.bg-blue-50');
-        resultsStep.classList.remove('bg-blue-50');
-        resultsStep.classList.add('bg-green-50');
-        
-        const resultsIcon = resultsStep.querySelector('.bg-blue-500');
-        resultsIcon.classList.remove('bg-blue-500', 'animate-spin');
-        resultsIcon.classList.add('bg-green-500');
-        resultsIcon.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
-        
-        const resultsProgress = resultsStep.querySelector('.text-blue-600');
-        resultsProgress.textContent = 'Complete';
-        resultsProgress.classList.remove('text-blue-600');
-        resultsProgress.classList.add('text-green-600');
+    async function loadResults(jobId) {
+        try {
+            const response = await fetch(`http://localhost:5000/api/results/${jobId}`);
+            
+            if (!response.ok) {
+                throw new Error('Failed to load results');
+            }
+            
+            const results = await response.json();
+            displayResults(results, jobId);
+            
+        } catch (error) {
+            console.error('Results loading error:', error);
+            showError('Failed to load analysis results');
+        }
+    }
+
+    function displayResults(results, jobId) {
+        // Complete all steps
+        completeResultsStep();
         
         // Show completion message
-        setTimeout(() => {
-            showResults();
-        }, 1000);
+        showSuccessNotification();
+        
+        // Add download buttons with real functionality
+        addDownloadButtons(jobId);
+        
+        // Display results summary
+        displayResultsSummary(results);
     }
 
-    function showResults() {
-        // Create results notification
+    function completeResultsStep() {
+        const resultsStep = document.querySelector('.bg-blue-50');
+        if (resultsStep) {
+            resultsStep.classList.remove('bg-blue-50');
+            resultsStep.classList.add('bg-green-50');
+            
+            const icon = resultsStep.querySelector('.bg-blue-500');
+            if (icon) {
+                icon.classList.remove('bg-blue-500', 'animate-spin');
+                icon.classList.add('bg-green-500');
+                icon.innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
+            }
+            
+            const progress = resultsStep.querySelector('.text-blue-600');
+            if (progress) {
+                progress.textContent = 'Complete';
+                progress.classList.remove('text-blue-600');
+                progress.classList.add('text-green-600');
+            }
+        }
+    }
+
+    function showSuccessNotification() {
         const notification = document.createElement('div');
         notification.className = 'fixed top-4 right-4 bg-green-500 text-white p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
         notification.innerHTML = `
@@ -271,29 +404,170 @@ document.addEventListener('DOMContentLoaded', function() {
             notification.classList.remove('translate-x-full');
         }, 100);
         
-        // Add download button to progress section
-        const progressSection = document.querySelector('#analysisProgress .bg-white');
-        const downloadButton = document.createElement('div');
-        downloadButton.className = 'mt-8 text-center';
-        downloadButton.innerHTML = `
-            <button class="bg-gradient-to-r from-primary to-accent text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
-                <i class="fas fa-download mr-2"></i>
-                Download Results
-            </button>
-            <button class="ml-4 bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors duration-300">
-                View Report
-            </button>
-        `;
-        
-        progressSection.appendChild(downloadButton);
-        
         // Remove notification after 5 seconds
         setTimeout(() => {
             notification.classList.add('translate-x-full');
             setTimeout(() => {
-                document.body.removeChild(notification);
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
             }, 300);
         }, 5000);
+    }
+
+    function addDownloadButtons(jobId) {
+        const progressSection = document.querySelector('#analysisProgress .bg-white');
+        const existingButtons = progressSection.querySelector('.download-buttons');
+        
+        if (!existingButtons) {
+            const downloadDiv = document.createElement('div');
+            downloadDiv.className = 'mt-8 text-center download-buttons';
+            downloadDiv.innerHTML = `
+                <button onclick="downloadFile('${jobId}', 'classification_report.csv')" class="bg-gradient-to-r from-primary to-accent text-white px-8 py-3 rounded-lg font-semibold hover:shadow-lg transform hover:-translate-y-1 transition-all duration-300">
+                    <i class="fas fa-download mr-2"></i>
+                    Download CSV Report
+                </button>
+                <button onclick="downloadFile('${jobId}', 'results.json')" class="ml-4 bg-gray-500 text-white px-8 py-3 rounded-lg font-semibold hover:bg-gray-600 transition-colors duration-300">
+                    <i class="fas fa-file-code mr-2"></i>
+                    Download JSON
+                </button>
+            `;
+            progressSection.appendChild(downloadDiv);
+        }
+    }
+
+    // Make downloadFile function global
+    window.downloadFile = function(jobId, filename) {
+        const url = `http://localhost:5000/api/download/${jobId}/${filename}`;
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    function displayResultsSummary(results) {
+        // Create results summary section if it doesn't exist
+        let summarySection = document.getElementById('resultsSummary');
+        if (!summarySection) {
+            summarySection = document.createElement('section');
+            summarySection.id = 'resultsSummary';
+            summarySection.className = 'py-16 bg-gray-50';
+            summarySection.innerHTML = `
+                <div class="container mx-auto px-6">
+                    <div class="max-w-6xl mx-auto">
+                        <h2 class="text-3xl font-bold text-dark mb-8 text-center font-rejouice">Analysis Results</h2>
+                        <div id="resultsSummaryContent"></div>
+                    </div>
+                </div>
+            `;
+            
+            const analysisSection = document.querySelector('#analysisProgress');
+            analysisSection.parentNode.insertBefore(summarySection, analysisSection.nextSibling);
+        }
+        
+        // Populate results
+        const content = document.getElementById('resultsSummaryContent');
+        content.innerHTML = `
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div class="bg-white rounded-lg p-6 shadow-lg text-center">
+                    <div class="text-3xl font-bold text-primary mb-2">${results.input_sequences}</div>
+                    <div class="text-gray-600">Total Sequences</div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-lg text-center">
+                    <div class="text-3xl font-bold text-accent mb-2">${results.species_identified}</div>
+                    <div class="text-gray-600">Species Identified</div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-lg text-center">
+                    <div class="text-3xl font-bold text-green-600 mb-2">${results.classified_sequences}</div>
+                    <div class="text-gray-600">Classified</div>
+                </div>
+                <div class="bg-white rounded-lg p-6 shadow-lg text-center">
+                    <div class="text-3xl font-bold text-purple-600 mb-2">${results.novel_sequences}</div>
+                    <div class="text-gray-600">Novel/Unclassified</div>
+                </div>
+            </div>
+            
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-lg p-6 shadow-lg">
+                    <h3 class="text-xl font-bold text-dark mb-4">Top Species Found</h3>
+                    <div class="space-y-3">
+                        ${results.top_species.map(species => `
+                            <div class="flex justify-between items-center p-3 bg-gray-50 rounded">
+                                <div>
+                                    <div class="font-medium">${species.name}</div>
+                                    <div class="text-sm text-gray-600">Confidence: ${(species.confidence * 100).toFixed(1)}%</div>
+                                </div>
+                                <div class="text-primary font-bold">${species.count}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+                
+                <div class="bg-white rounded-lg p-6 shadow-lg">
+                    <h3 class="text-xl font-bold text-dark mb-4">Diversity Metrics</h3>
+                    <div class="space-y-4">
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Shannon Diversity:</span>
+                            <span class="font-semibold">${results.diversity_metrics.shannon_diversity.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Simpson Diversity:</span>
+                            <span class="font-semibold">${results.diversity_metrics.simpson_diversity.toFixed(2)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Species Richness:</span>
+                            <span class="font-semibold">${results.diversity_metrics.species_richness}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-gray-600">Evenness:</span>
+                            <span class="font-semibold">${results.diversity_metrics.evenness.toFixed(2)}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Scroll to results
+        summarySection.scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function showError(message) {
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 bg-red-500 text-white p-4 rounded-lg shadow-lg z-50 transform translate-x-full transition-transform duration-300';
+        notification.innerHTML = `
+            <div class="flex items-center">
+                <i class="fas fa-exclamation-triangle mr-3"></i>
+                <div>
+                    <div class="font-semibold">Analysis Error</div>
+                    <div class="text-sm opacity-90">${message}</div>
+                </div>
+            </div>
+        `;
+        
+        document.body.appendChild(notification);
+        
+        // Slide in notification
+        setTimeout(() => {
+            notification.classList.remove('translate-x-full');
+        }, 100);
+        
+        // Remove notification after 8 seconds
+        setTimeout(() => {
+            notification.classList.add('translate-x-full');
+            setTimeout(() => {
+                if (document.body.contains(notification)) {
+                    document.body.removeChild(notification);
+                }
+            }, 300);
+        }, 8000);
+    }
+
+    function resetAnalysisButton() {
+        startAnalysisBtn.disabled = false;
+        startAnalysisBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Analysis';
+        validateInput();
     }
 
     // Enhanced model card interactions

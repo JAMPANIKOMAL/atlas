@@ -43,6 +43,7 @@ import gc
 import io
 import uuid
 import logging
+import time
 
 # --- Machine Learning & Data Processing Imports ---
 from tensorflow.keras.models import load_model
@@ -293,6 +294,8 @@ def run_analysis(input_fasta_path: Path, report_name: str = None, verbose: bool 
               formatted report, and structured data for potential further use.
     """
     
+    start_time = time.time()
+    
     # --- 1. Check GPU Status ---
     gpu_status = check_gpu_status()
 
@@ -365,6 +368,9 @@ def run_analysis(input_fasta_path: Path, report_name: str = None, verbose: bool 
     sorted_results = sorted(classified_results.items(), key=lambda item: item[1], reverse=True)
     classified_results_str = 'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in sorted_results])
 
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    
     final_report_text = f"""
 +-------------------------------------------------------------+
 |          ATLAS: AI Taxonomic Learning & Analysis System     |
@@ -376,6 +382,7 @@ def run_analysis(input_fasta_path: Path, report_name: str = None, verbose: bool 
 | GPU Status: {gpu_status}
 | Input File: {Path(input_fasta_path).name}
 | Total Sequences Analyzed: {len(input_sequences)}
+| Analysis Time: {elapsed_time:.2f} seconds
 +-------------------------------------------------------------+
 
 [  PART 1: FILTER RESULTS  ]

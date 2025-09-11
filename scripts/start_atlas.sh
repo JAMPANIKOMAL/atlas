@@ -3,6 +3,9 @@
 # ATLAS Startup Script (Conda Version)
 echo "Starting ATLAS Environmental DNA Analysis Platform..."
 
+# Change to project root directory
+cd "$(dirname "$0")/.."
+
 # Check if conda is installed
 if ! command -v conda &> /dev/null; then
     echo "Error: Conda is not installed or not in PATH"
@@ -46,7 +49,7 @@ else
 fi
 
 echo ""
-echo "🧬 ATLAS is now running!"
+echo "ATLAS is now running!"
 echo ""
 echo "Frontend: Open 'frontend/index.html' in your web browser"
 echo "Backend API: http://localhost:5000"

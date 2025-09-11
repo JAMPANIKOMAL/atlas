@@ -3,6 +3,9 @@ REM ATLAS Startup Script for Windows (Conda Version)
 
 echo Starting ATLAS Environmental DNA Analysis Platform...
 
+REM Change to project root directory
+cd /d "%~dp0.."
+
 REM Check if conda is available
 where conda >nul 2>&1
 if %errorlevel% neq 0 (
@@ -42,7 +45,7 @@ REM Wait for backend to start
 timeout /t 5 /nobreak >nul
 
 echo.
-echo 🧬 ATLAS is now running!
+echo ATLAS is now running!
 echo.
 echo Frontend: Opening in your default browser...
 echo Backend API: http://localhost:5000

@@ -13,7 +13,20 @@
 #
 #   python src/predict.py --input_fasta "path/to/your/file.fasta"
 #
-#   The script will print a detailed report to the console.
+#   The script will print a detailed report to the console and also save a copy
+#   as a .txt file in the 'reports' folder.
+#
+# ENVIRONMENT REQUIREMENTS:
+#
+#   This script MUST be run from within the project's Conda environment
+#   (e.g., 'atlas' or 'atlas-cpu'). This environment manages all necessary
+#   dependencies (TensorFlow, Biopython, etc.).
+#
+# GPU vs. CPU SUPPORT:
+#
+#   The script is fully compatible with both GPU and CPU systems. The 'tensorflow'
+#   library will automatically use an available NVIDIA GPU for faster processing.
+#   If a GPU is not detected, it will gracefully fall back to the CPU.
 #
 # =============================================================================
 
@@ -28,6 +41,7 @@ import sys
 from collections import Counter
 import gc
 import io
+import uuid
 
 # --- Machine Learning & Data Processing Imports ---
 from tensorflow.keras.models import load_model
@@ -373,6 +387,17 @@ if __name__ == "__main__":
     # Run the main analysis function
     result = run_analysis(args.input_fasta)
 
+    # Generate a unique filename for the report
+    report_filename = f"ATLAS_REPORT_{Path(args.input_fasta).stem}_{uuid.uuid4().hex}.txt"
+    report_path = REPORTS_DIR / report_filename
+
+    # Save the report to the reports folder
+    try:
+        with open(report_path, "w") as f:
+            f.write(result["report_content"])
+        print(f"\n[SUCCESS] Analysis complete. Report saved to: {report_path}")
+    except Exception as e:
+        print(f"\n[ERROR] Failed to save report file: {e}", file=sys.stderr)
+    
     # Print the final report to the console
     print(result["report_content"])
-    print("\n[SUCCESS] ATLAS analysis complete.")

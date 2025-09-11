@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Script to create a 1MB test FASTA file from the SILVA database.
+Script to create a 0.1MB test FASTA file from the SILVA database.
 """
 
 import os
 import sys
 
-def create_test_fasta(input_file, output_file, target_size_mb=1):
+def create_test_fasta(input_file, output_file, target_size_mb=0.1):
     """
     Create a test FASTA file of specified size from a larger FASTA file.
     
     Args:
         input_file (str): Path to the input SILVA FASTA file
         output_file (str): Path to the output test FASTA file
-        target_size_mb (int): Target size in megabytes
+        target_size_mb (float): Target size in megabytes
     """
-    target_size_bytes = target_size_mb * 1024 * 1024  # Convert MB to bytes
+    target_size_bytes = int(target_size_mb * 1024 * 1024)  # Convert MB to bytes
     current_size = 0
     sequence_count = 0
     
@@ -81,7 +81,7 @@ def create_test_fasta(input_file, output_file, target_size_mb=1):
 def main():
     # Define file paths
     input_file = r"C:\Users\jampa\Music\atlas\data\raw\SILVA_138.1_SSURef_NR99_tax_silva.fasta"
-    output_file = r"C:\Users\jampa\Music\atlas\data\processed\silva_test_1mb.fasta"
+    output_file = r"C:\Users\jampa\Music\atlas\data\processed\silva_test_0.1mb.fasta"
     
     # Create processed directory if it doesn't exist
     os.makedirs(os.path.dirname(output_file), exist_ok=True)
@@ -92,10 +92,10 @@ def main():
         sys.exit(1)
     
     # Create the test file
-    success = create_test_fasta(input_file, output_file, target_size_mb=1)
+    success = create_test_fasta(input_file, output_file, target_size_mb=0.1)
     
     if success:
-        print(f"\n✅ Successfully created 1MB test FASTA file!")
+        print(f"\n✅ Successfully created 0.1MB test FASTA file!")
         print(f"Location: {output_file}")
     else:
         print("❌ Failed to create test file!")

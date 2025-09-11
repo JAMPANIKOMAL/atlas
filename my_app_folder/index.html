@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ATLAS: eDNA Biodiversity Analyzer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1b1b22;
+            color: #d1d5db;
+        }
+        .pro-card {
+            background-color: #282833;
+            border: 1px solid #3f3f46;
+        }
+        .pro-button {
+            background-color: #0d9488;
+            color: #ffffff;
+            transition: all 0.2s;
+        }
+        .pro-button:hover {
+            background-color: #0f766e;
+        }
+        .pro-button:focus {
+            box-shadow: 0 0 0 4px rgba(13, 148, 136, 0.5);
+            outline: none;
+        }
+        .pro-input-file::-webkit-file-upload-button {
+            background-color: #0d9488;
+            color: #ffffff;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .pro-input-file::-webkit-file-upload-button:hover {
+            background-color: #0f766e;
+        }
+    </style>
+</head>
+<body class="flex items-center justify-center min-h-screen p-6">
+    <div class="pro-card p-8 rounded-2xl shadow-2xl w-full max-w-xl">
+        <div class="flex flex-col items-center justify-center mb-8">
+            <svg class="h-12 w-12 text-emerald-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 21a9 9 0 009-9H3a9 9 0 009 9z" />
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 3v18M3 12h18" />
+            </svg>
+            <h1 class="text-3xl font-bold text-gray-100 mt-2">ATLAS</h1>
+            <p class="text-center text-gray-400 text-sm mt-1">eDNA Analysis System</p>
+        </div>
+        
+        <div class="space-y-6">
+            <div>
+                <label for="fasta-file-input" class="block text-sm font-medium text-gray-300 mb-2">Upload FASTA File</label>
+                <input id="fasta-file-input" type="file" accept=".fasta,.fna,.ffn,.faa,.frn" class="pro-input-file block w-full text-sm text-gray-400
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-emerald-600 file:text-white
+                    hover:file:bg-emerald-700
+                    bg-gray-700 rounded-lg p-2 cursor-pointer
+                    focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            </div>
+            
+            <div class="relative flex items-center justify-center my-6">
+                <div class="flex-grow border-t border-gray-600"></div>
+                <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+                <div class="flex-grow border-t border-gray-600"></div>
+            </div>
+            
+            <div>
+                <label for="dna-sequence-input" class="block text-sm font-medium text-gray-300 mb-2">Paste Raw Sequence(s)</label>
+                <textarea id="dna-sequence-input" rows="6" class="block w-full px-4 py-3 bg-gray-700 rounded-lg shadow-inner
+                    focus:outline-none focus:ring-2 focus:ring-emerald-500
+                    placeholder-gray-500 resize-none text-gray-200 text-sm"
+                    placeholder=">sequence_1
+GATTACA...
+>sequence_2
+AAGCTT..."></textarea>
+            </div>
+
+            <div class="text-center mt-8">
+                <button id="run-analysis-btn" class="pro-button w-full px-8 py-3 font-bold text-lg rounded-full shadow-md">
+                    Run Analysis
+                </button>
+            </div>
+        </div>
+        
+        <div id="results-container" class="mt-8 p-6 pro-card rounded-xl shadow-inner hidden">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-xl font-bold text-gray-100">Analysis Results</h2>
+                <div class="flex items-center space-x-2">
+                    <button id="copy-report-btn" class="text-gray-400 hover:text-gray-100 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path d="M7 9a2 2 0 012-2h6a2 2 0 012 2v6a2 2 0 01-2 2H9a2 2 0 01-2-2V9z" />
+                            <path d="M5 3a2 2 0 00-2 2v6a2 2 0 002 2V5h8a2 2 0 00-2-2H5z" />
+                        </svg>
+                    </button>
+                    <button id="download-report-btn" class="text-gray-400 hover:text-gray-100 transition-colors duration-200">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+            <div id="results-content" class="text-gray-300 whitespace-pre-wrap text-sm"></div>
+        </div>
+        
+        <div id="loading-spinner" class="mt-8 text-center hidden">
+            <svg class="animate-spin h-8 w-8 text-emerald-500 mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <p class="mt-3 text-gray-400">Running analysis...</p>
+        </div>
+        
+        <div id="error-message" class="mt-8 p-4 bg-red-800 text-red-200 rounded-lg shadow-inner hidden">
+            <h3 class="font-bold">Error</h3>
+            <p id="error-text" class="mt-1"></p>
+        </div>
+    </div>
+
+    <script>
+        const runButton = document.getElementById('run-analysis-btn');
+        const fileInput = document.getElementById('fasta-file-input');
+        const textInput = document.getElementById('dna-sequence-input');
+        const resultsContainer = document.getElementById('results-container');
+        const resultsContent = document.getElementById('results-content');
+        const loadingSpinner = document.getElementById('loading-spinner');
+        const errorMessage = document.getElementById('error-message');
+        const errorText = document.getElementById('error-text');
+        const copyButton = document.getElementById('copy-report-btn');
+        const downloadButton = document.getElementById('download-report-btn');
+
+        runButton.addEventListener('click', async () => {
+            const file = fileInput.files[0];
+            const text = textInput.value.trim();
+
+            if (!file && !text) {
+                alert('Please upload a FASTA file or enter a DNA sequence.');
+                return;
+            }
+
+            // Show loading spinner and hide previous results/errors
+            loadingSpinner.classList.remove('hidden');
+            resultsContainer.classList.add('hidden');
+            errorMessage.classList.add('hidden');
+            runButton.disabled = true;
+
+            const formData = new FormData();
+            if (file) {
+                formData.append('file', file);
+            } else if (text) {
+                formData.append('data', text);
+            }
+
+            try {
+                const response = await fetch('/run_analysis', {
+                    method: 'POST',
+                    body: formData,
+                });
+
+                const result = await response.json();
+                
+                if (response.ok && result.status === 'success') {
+                    resultsContent.textContent = result.report_content; // Corrected from 'explorer_report'
+                    resultsContainer.classList.remove('hidden');
+                } else {
+                    errorText.textContent = result.message || 'An unknown error occurred.';
+                    errorMessage.classList.remove('hidden');
+                }
+
+            } catch (err) {
+                errorText.textContent = 'Failed to connect to the server. Please ensure the server is running.';
+                errorMessage.classList.remove('hidden');
+            } finally {
+                loadingSpinner.classList.add('hidden');
+                runButton.disabled = false;
+            }
+        });
+        
+        copyButton.addEventListener('click', () => {
+            const textToCopy = resultsContent.textContent;
+            navigator.clipboard.writeText(textToCopy).then(() => {
+                alert('Report copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert('Failed to copy report.');
+            });
+        });
+
+        downloadButton.addEventListener('click', () => {
+            const textToSave = resultsContent.textContent;
+            const blob = new Blob([textToSave], { type: 'text/plain' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'atlas_report.txt';
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
+</body>
+</html>

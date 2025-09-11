@@ -7,12 +7,12 @@ This document provides step-by-step commands to start and use the ATLAS web inte
 ### Windows Users
 
 #### Option 1: Automated Startup (Recommended)
-```cmd
+```powershell
 # Navigate to ATLAS directory
 cd C:\Users\YourName\path\to\atlas
 
-# Run the startup script
-scripts\start_atlas.bat
+# Run the PowerShell startup script
+scripts\start_atlas.ps1
 
 # The script will:
 # - Check conda installation
@@ -23,21 +23,18 @@ scripts\start_atlas.bat
 ```
 
 #### Option 2: Manual Startup
-```cmd
+```powershell
 # 1. Check conda environments
 conda info --envs
 
-# 2. Activate atlas environment  
-conda activate atlas
+# 2. Install Flask dependencies (first time only)
+conda run -n atlas pip install -r backend\requirements.txt
 
-# 3. Install Flask dependencies (first time only)
-pip install -r backend\requirements.txt
+# 3. Start backend server
+conda run -n atlas python backend\app.py
 
-# 4. Start backend server
-python backend\app.py
-
-# 5. Open frontend (in new terminal)
-start frontend\index.html
+# 4. Open frontend (in new PowerShell terminal)
+Invoke-Item frontend\index.html
 ```
 
 ### Linux/macOS Users
@@ -120,16 +117,16 @@ ls -la frontend/
 ### Access the Web Interface
 
 #### Method 1: Direct File Access
-```bash
+```powershell
 # Open main page
-open frontend/index.html
+Invoke-Item frontend\index.html
 
 # Or open analysis page directly
-open frontend/html/analysis.html
+Invoke-Item frontend\html\analysis.html
 ```
 
 #### Method 2: Local Web Server (Recommended)
-```bash
+```powershell
 # Using Python's built-in server
 cd frontend
 python -m http.server 8080
@@ -157,23 +154,22 @@ code frontend/index.html
 ## Testing Upload and Analysis
 
 ### Create Test Data
-```bash
+```powershell
 # Create a test FASTA file
-cat > test_sample.fasta << EOF
+@'
 >Test_Sequence_1
 ATCGATCGATCGATCGATCG
 >Test_Sequence_2
 GCTAGCTAGCTAGCTAGCTA
 >Test_Sequence_3
 TTTTAAAAAGGGGCCCCTTTT
-EOF
+'@ | Out-File -FilePath test_sample.fasta -Encoding ASCII
 ```
 
 ### Test via Command Line (API Testing)
-```bash
+```powershell
 # 1. Upload file
-curl -X POST -F "file=@test_sample.fasta" -F "analysis_mode=rapid" \
-     http://localhost:5000/api/upload
+curl -X POST -F "file=@test_sample.fasta" -F "analysis_mode=rapid" http://localhost:5000/api/upload
 
 # Response will include job_id like:
 # {"job_id": "12345-abcde-...", "message": "File uploaded successfully"}
@@ -224,8 +220,11 @@ curl -O http://localhost:5000/api/download/JOB_ID/classification_report.csv
 ## Maintenance Commands
 
 ### Stop the System
-```bash
+```powershell
 # Windows - close the command window or press Ctrl+C
+# If running as background process, find and stop:
+Get-Process | Where-Object {$_.ProcessName -eq "python" -and $_.CommandLine -like "*backend/app.py*"} | Stop-Process
+
 # Linux/macOS - if running in background:
 kill $(cat atlas_backend.pid)  # if PID file exists
 # or find and kill process:
@@ -233,33 +232,34 @@ pkill -f "python backend/app.py"
 ```
 
 ### Clean Up Temporary Files
-```bash
+```powershell
 # Remove uploaded files
-rm -rf backend/uploads/*
+Remove-Item -Recurse -Force backend\uploads\*
 
 # Remove result files  
-rm -rf backend/results/*
+Remove-Item -Recurse -Force backend\results\*
 
-# Remove generated reports
-rm -rf reports/*
+# Remove generated reports (if reports directory exists)
+if (Test-Path reports) { Remove-Item -Recurse -Force reports\* }
 ```
 
 ### Update Dependencies
-```bash
+```powershell
 # Update Flask dependencies
-conda run -n atlas pip install -r backend/requirements.txt --upgrade
+conda run -n atlas pip install -r backend\requirements.txt --upgrade
 
 # Update conda environment
 conda env update -f environment.yml
 ```
 
 ### Backup Results
-```bash
+```powershell
 # Create backup of results
-tar -czf atlas_backup_$(date +%Y%m%d).tar.gz backend/results/
+$date = Get-Date -Format "yyyyMMdd"
+Compress-Archive -Path backend\results\* -DestinationPath "atlas_backup_$date.zip"
 
 # Or copy to another location
-cp -r backend/results/ /path/to/backup/location/
+Copy-Item -Recurse backend\results\ C:\path\to\backup\location\
 ```
 
 ## Troubleshooting Commands
@@ -267,97 +267,95 @@ cp -r backend/results/ /path/to/backup/location/
 ### Common Issues
 
 #### Backend Not Starting
-```bash
+```powershell
 # Check conda environment
-conda info --envs | grep atlas
+conda info --envs | findstr atlas
 
 # Test environment
 conda run -n atlas python -c "import flask; print('Flask OK')"
 
 # Check port 5000
-netstat -an | grep 5000  # Windows: netstat -an | findstr 5000
+netstat -an | findstr 5000
 
 # Kill process using port 5000
-sudo lsof -ti:5000 | xargs kill -9  # macOS/Linux
-netstat -ano | findstr :5000        # Windows - then kill PID
+$process = Get-NetTCPConnection -LocalPort 5000 -ErrorAction SilentlyContinue
+if ($process) { Stop-Process -Id $process.OwningProcess }
 ```
 
 #### Frontend Not Loading
-```bash
+```powershell
 # Check if files exist
-ls -la frontend/index.html
-ls -la frontend/html/analysis.html
-ls -la frontend/js/analysis.js
+Get-Item frontend\index.html
+Get-Item frontend\html\analysis.html
+Get-Item frontend\js\analysis.js
 
 # Check browser console for errors
 # Open Developer Tools (F12) → Console tab
 ```
 
 #### Analysis Failing
-```bash
+```powershell
 # Check model files
-ls -la models/
+Get-ChildItem models\
 
 # Test prediction script directly
-conda run -n atlas python src/predict.py --input_fasta test_sample.fasta
+conda run -n atlas python src\predict.py --input_fasta test_sample.fasta
 
 # Check backend logs
 # Look at terminal running backend for error messages
 ```
 
 #### Upload Issues
-```bash
-# Check file permissions
-ls -la backend/uploads/
-chmod 755 backend/uploads/  # if needed
+```powershell
+# Check file permissions and directory
+Get-ChildItem backend\uploads\ | Format-List
 
 # Check file format
-file test_sample.fasta
-head -5 test_sample.fasta
+Get-Content test_sample.fasta | Select-Object -First 5
 ```
 
 ## Performance Monitoring
 
 ### Check System Resources
-```bash
+```powershell
 # CPU and memory usage
-top  # Linux/macOS
-tasklist  # Windows
+Get-Process | Where-Object {$_.ProcessName -eq "python"} | Select-Object ProcessName, CPU, WorkingSet
 
 # Disk space
-df -h  # Linux/macOS  
-dir   # Windows
+Get-WmiObject -Class Win32_LogicalDisk | Select-Object DeviceID, @{Name="Size(GB)";Expression={[math]::Round($_.Size/1GB,2)}}, @{Name="FreeSpace(GB)";Expression={[math]::Round($_.FreeSpace/1GB,2)}}
 
 # Network connections
-netstat -an | grep 5000
+netstat -an | findstr 5000
 ```
 
 ### Backend Performance
-```bash
+```powershell
 # Test response time
-time curl http://localhost:5000/api/health
+Measure-Command { curl http://localhost:5000/api/health }
 
 # Monitor requests (if needed)
-tail -f backend/app.log  # if logging enabled
+# Check terminal running backend for log messages
 ```
 
 ## Quick Reference
 
 ### Essential Commands
-```bash
-# Start system
-scripts\start_atlas.bat      # Windows
-scripts/start_atlas.sh       # Linux/macOS
+```powershell
+# Start system (Windows)
+scripts\start_atlas.ps1
+
+# Start system (Linux/macOS)  
+scripts/start_atlas.sh
 
 # Test backend  
 curl http://localhost:5000/api/health
 
 # Stop system
-Ctrl+C                       # In backend terminal
-kill $(cat atlas_backend.pid)  # Background process
+Ctrl+C                                    # In backend terminal
+Stop-Process -Name python -Force         # Kill all Python processes
 
 # Clean up
-rm -rf backend/uploads/* backend/results/*
+Remove-Item -Recurse -Force backend\uploads\*, backend\results\*
 ```
 
 ### Important URLs

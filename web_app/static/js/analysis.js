@@ -110,23 +110,52 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
-    function startAnalysis() {
-        if (startAnalysisBtn.disabled) return;
-        
-        // Get analysis mode
-        const analysisMode = document.querySelector('input[name="analysisMode"]:checked').value;
-        
-        // Show progress section
-        analysisProgress.classList.remove('hidden');
-        analysisProgress.scrollIntoView({ behavior: 'smooth' });
-        
-        // Disable start button
-        startAnalysisBtn.disabled = true;
-        startAnalysisBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Processing...';
-        
-        // Simulate analysis progress
-        simulateAnalysis();
+function startAnalysis() {
+    if (startAnalysisBtn.disabled) return;
+    
+    // Get analysis mode and input sequences
+    const analysisMode = document.querySelector('input[name="analysisMode"]:checked').value;
+    const sequences = sequenceInput.value.trim();
+    
+    if (!sequences) {
+        alert("Please paste some sequences or upload a file.");
+        return;
     }
+    
+    // Show progress section
+    analysisProgress.classList.remove('hidden');
+    analysisProgress.scrollIntoView({ behavior: 'smooth' });
+    
+    // Disable start button
+    startAnalysisBtn.disabled = true;
+    startAnalysisBtn.innerHTML = '<i class="fas fa-spinner animate-spin mr-2"></i>Processing...';
+
+    // Send data to the backend via a POST request
+    fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            sequences: sequences,
+            analysisMode: analysisMode
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        console.log('Success:', data);
+        // Your existing logic to update the UI on completion
+        // ... (call functions like completeProcessing, showResults etc.)
+        completeAnalysis(); // This should be updated to use the data from the server.
+    })
+    .catch((error) => {
+        console.error('Error:', error);
+        alert('An error occurred during analysis.');
+        // Re-enable the button and hide progress if there's an error
+        startAnalysisBtn.disabled = false;
+        startAnalysisBtn.innerHTML = '<i class="fas fa-play mr-2"></i>Start Analysis';
+    });
+}
 
     function simulateAnalysis() {
         let progress = 45;

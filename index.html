@@ -6,7 +6,7 @@
     <title>ATLAS: ARTIFICIAL TAXONOMIC LEARNING & ANALYSIS SYSTEM</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
@@ -53,11 +53,6 @@
             background-color: #0d1117;
             border: 1px solid #30363d;
         }
-        .terminal-text {
-            font-family: 'Roboto Mono', monospace;
-            color: #c9d1d9;
-            white-space: pre-wrap;
-        }
         .text-input-container {
             width: 100%;
             max-width: 600px;
@@ -100,27 +95,31 @@ GATTACA...
 AAGCTT..."></textarea>
                 </div>
     
-                <div class="mt-8">
+                <div class="mt-8 flex justify-center space-x-4">
                     <button id="run-analysis-btn" class="pro-button px-8 py-3 font-bold text-lg rounded-md shadow-md">
                         Run Analysis
+                    </button>
+                    <button id="cancel-btn" class="pro-button px-8 py-3 font-bold text-lg rounded-md shadow-md bg-red-600 hover:bg-red-700 hidden">
+                        Cancel
                     </button>
                 </div>
             </div>
         </div>
 
         <div id="loading-screen" class="flex flex-col items-center justify-center text-center hidden p-8">
-            <div class="mt-8 bg-[#0d1117] p-6 rounded-md w-full text-left">
-                <div id="terminal-log" class="terminal-text h-64 overflow-y-auto"></div>
-            </div>
+            <svg class="animate-spin h-10 w-10 text-[#2188ff] mx-auto" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
             <div class="mt-6 text-gray-400 text-sm animate-pulse">
-                Analyzing... Please wait, this may take a few minutes.
+                Analyzing... This may take a few minutes.
             </div>
         </div>
 
         <div id="results-screen" class="hidden p-8">
-            <div class="flex justify-between items-center mb-6">
-                <h2 class="text-xl font-bold text-gray-100">Analysis Results</h2>
-                <div class="flex space-x-4">
+            <div class="flex flex-col md:flex-row justify-between items-center mb-6">
+                <h2 class="text-xl font-bold text-gray-100 mb-4 md:mb-0">Analysis Results</h2>
+                <div class="flex flex-col md:flex-row space-y-4 md:space-y-0 md:space-x-4">
                     <button id="download-report-btn" class="pro-button px-4 py-2 rounded-md font-medium text-sm">
                         Download Report
                     </button>
@@ -159,7 +158,7 @@ AAGCTT..."></textarea>
             </div>
         </div>
         
-        <div id="error-message" class="mt-8 p-4 bg-red-800 text-red-200 rounded-md shadow-inner hidden">
+        <div id="error-message" class="mt-8 p-4 bg-red-800 text-red-200 rounded-md shadow-inner hidden text-left">
             <h3 class="font-bold">Error</h3>
             <p id="error-text" class="mt-1 text-sm"></p>
         </div>
@@ -178,20 +177,15 @@ AAGCTT..."></textarea>
         const newAnalysisBtn = document.getElementById('new-analysis-btn');
         const copyButton = document.getElementById('copy-report-btn');
         const downloadButton = document.getElementById('download-report-btn');
-        const terminalLog = document.getElementById('terminal-log');
+        const cancelButton = document.getElementById('cancel-btn');
 
         let barChartInstance, pieChartInstance, doughnutChartInstance;
-
-        const updateTerminalLog = (message) => {
-            terminalLog.innerHTML += `<span class="text-blue-400">> </span>${message}<br>`;
-            terminalLog.scrollTop = terminalLog.scrollHeight; // Auto-scroll
-        };
 
         const showInputScreen = () => {
             inputScreen.classList.remove('hidden');
             loadingScreen.classList.add('hidden');
             resultsScreen.classList.add('hidden');
-            terminalLog.innerHTML = `<span class="text-blue-400">> </span>Starting analysis...<br>`; // Reset log
+            errorMessage.classList.add('hidden');
         };
 
         const showLoadingScreen = () => {
@@ -207,14 +201,17 @@ AAGCTT..."></textarea>
         };
         
         const createCharts = (data) => {
+            if (!data || data.length === 0) {
+                return;
+            }
+
             const labels = data.map(item => item.label);
             const values = data.map(item => item.value);
-
-            // Sort data for bar chart
+            
             const sortedData = [...data].sort((a, b) => b.value - a.value).slice(0, 10);
             const sortedLabels = sortedData.map(item => item.label);
             const sortedValues = sortedData.map(item => item.value);
-            
+
             const getChartColors = (count) => {
                 const colors = [
                     '#2188ff', '#186acb', '#134e6b', '#a3e635', '#0f766e',
@@ -346,8 +343,6 @@ AAGCTT..."></textarea>
                 const result = await response.json();
                 
                 if (response.ok && result.status === 'success') {
-                    result.log.forEach(step => updateTerminalLog(step));
-
                     resultsContent.textContent = result.report_content;
                     if (result.classified_results) {
                         const chartData = Object.entries(result.classified_results).map(([key, value]) => ({ label: key, value: value }));
@@ -355,13 +350,11 @@ AAGCTT..."></textarea>
                     }
                     showResultsScreen();
                 } else {
-                    updateTerminalLog("Analysis failed.");
                     errorText.textContent = result.message || 'An unknown error occurred.';
                     errorMessage.classList.remove('hidden');
                 }
 
             } catch (err) {
-                updateTerminalLog("An error occurred.");
                 errorText.textContent = 'Failed to connect to the server. Please ensure the server is running.';
                 errorMessage.classList.remove('hidden');
             } finally {

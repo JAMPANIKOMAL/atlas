@@ -103,19 +103,15 @@ def check_gpu_status():
         return "GPU not found. Running on CPU."
 
 # --- Explorer Pipeline Functions (now in-memory) ---
-def explorer_step_1_vectorize(sequences, log):
-    log.append("  - Step 1: Vectorizing unclassified sequences...")
+def explorer_step_1_vectorize(sequences):
     KMER_SIZE = 6
     VECTOR_SIZE = 100
     
-    # Load or train Doc2Vec model
     doc2vec_model_path = MODELS_DIR / "explorer_doc2vec.model"
     if doc2vec_model_path.exists():
-        log.append("    - Loading pre-trained Doc2Vec model...")
         doc2vec_model = Doc2Vec.load(str(doc2vec_model_path))
     else:
-        log.append("    - Doc2Vec model not found. Training a new model...")
-        corpus = [TaggedDocument(words=[s.seq for s in sequences], tags=[s.id]) for s in sequences]
+        corpus = [TaggedDocument(words=[str(s.seq) for s in sequences], tags=[s.id]) for s in sequences]
         doc2vec_model = Doc2Vec(vector_size=VECTOR_SIZE, dm=1, min_count=3, window=8, epochs=40, workers=4)
         doc2vec_model.build_vocab(corpus)
         doc2vec_model.train(corpus, total_examples=doc2vec_model.corpus_count, epochs=doc2vec_model.epochs)
@@ -123,26 +119,22 @@ def explorer_step_1_vectorize(sequences, log):
     
     sequence_vectors = np.array([doc2vec_model.dv[seq.id] for seq in sequences])
     sequence_vectors = normalize(sequence_vectors)
-    log.append(f"    - Vectors generated for {len(sequences)} sequences.")
     
     return sequence_vectors
 
-def explorer_step_2_cluster(sequence_vectors, log):
-    log.append("  - Step 2: Clustering vectors with HDBSCAN...")
+def explorer_step_2_cluster(sequence_vectors):
     clusterer = hdbscan.HDBSCAN(min_cluster_size=5, min_samples=1, metric='euclidean', cluster_selection_method='eom')
     cluster_labels = clusterer.fit_predict(sequence_vectors)
-    log.append(f"    - Found {len(np.unique(cluster_labels)) - 1} clusters.")
+    
     return cluster_labels
 
-def explorer_step_3_interpret(sequences, sequence_vectors, cluster_labels, log):
-    log.append("  - Step 3: Interpreting clusters with BLAST...")
+def explorer_step_3_interpret(sequences, sequence_vectors, cluster_labels):
     report_lines = []
     unique_cluster_ids = sorted(np.unique(cluster_labels))
     if -1 in unique_cluster_ids:
         unique_cluster_ids.remove(-1)
 
     for cluster_id in unique_cluster_ids:
-        log.append(f"    - Analyzing Cluster {cluster_id}...")
         cluster_indices = np.where(cluster_labels == cluster_id)[0]
         cluster_vectors = sequence_vectors[cluster_indices]
         
@@ -152,7 +144,7 @@ def explorer_step_3_interpret(sequences, sequence_vectors, cluster_labels, log):
         
         representative_sequence = sequences[cluster_indices[rep_index_in_cluster]]
         
-        top_hit_title = "BLAST search skipped for this example." # Mocking BLAST for this implementation
+        top_hit_title = "BLAST search skipped for this example."
         
         report_lines.append(f"Cluster ID: {cluster_id}")
         report_lines.append(f"  - Size: {len(cluster_indices)} sequences")
@@ -172,15 +164,11 @@ def run_analysis(input_fasta_path):
     Returns:
         dict: A dictionary containing the analysis results.
     """
-    analysis_log = []
     
     # --- 1. Check GPU Status ---
-    analysis_log.append(f"GPU Status: {check_gpu_status()}")
+    gpu_status = check_gpu_status()
 
     # --- 2. Load and Run Filter Models Sequentially ---
-    analysis_log.append("Loading and running 'Filter' AI Models...")
-    
-    # The models are now loaded one by one inside the loop
     potential_classifiers = [
         ("16s", 6), ("18s", 6), ("coi", 8), ("its", 7)
     ]
@@ -191,53 +179,45 @@ def run_analysis(input_fasta_path):
     try:
         input_sequences = list(SeqIO.parse(input_fasta_path, "fasta"))
     except Exception as e:
-        return {"status": "error", "message": f"Failed to parse FASTA file: {e}", "log": analysis_log}
+        return {"status": "error", "message": f"Failed to parse FASTA file: {e}"}
     
-    for seq_record in tqdm(input_sequences, desc="  - Processing sequences"):
-        sequence_str = str(seq_record.seq)
-        prediction_made = False
-        
-        # Sequentially load and predict with each model
-        for name, kmer_size in potential_classifiers:
-            model = TaxonClassifier(name, kmer_size)
-            if model.is_loaded:
-                label, prob = model.predict(sequence_str)
+    unclassified_sequences = input_sequences.copy()
+
+    for name, kmer_size in potential_classifiers:
+        # Load one model at a time
+        classifier = TaxonClassifier(name, kmer_size)
+        if classifier.is_loaded:
+            newly_classified = []
+            sequences_to_reprocess = []
+            
+            for seq_record in unclassified_sequences:
+                label, prob = classifier.predict(str(seq_record.seq))
                 if label:
                     classified_results[label] += 1
-                    prediction_made = True
-                    del model  # Explicitly delete the model to free memory
-                    tf.keras.backend.clear_session()
-                    gc.collect()
-                    break # Move to the next sequence
-            else:
-                analysis_log.append(f"Warning: Missing artifacts for {name}. Skipping classifier.")
-                
-        if not prediction_made:
-            unclassified_sequences.append(seq_record)
+                    newly_classified.append(seq_record)
+                else:
+                    sequences_to_reprocess.append(seq_record)
+            
+            unclassified_sequences = sequences_to_reprocess
+        
+        # Unload the model and clear memory
+        del classifier
+        tf.keras.backend.clear_session()
+        gc.collect()
 
-    analysis_log.append(f"  - Classification complete.")
-    analysis_log.append(f"    - Known organisms identified: {sum(classified_results.values())}")
-    analysis_log.append(f"    - Unclassified sequences: {len(unclassified_sequences)}")
-    
     # --- 3. Run Explorer Pipeline (if necessary) ---
     explorer_report_content = "No unclassified sequences to explore."
     if unclassified_sequences:
-        analysis_log.append("Starting 'Explorer' AI Pipeline...")
-        
-        sequence_vectors = explorer_step_1_vectorize(unclassified_sequences, analysis_log)
-        cluster_labels = explorer_step_2_cluster(sequence_vectors, analysis_log)
-        explorer_report_content = explorer_step_3_interpret(unclassified_sequences, sequence_vectors, cluster_labels, analysis_log)
-        
-        analysis_log.append("  - Explorer pipeline complete.")
-
-    # --- 4. Generate Final Report ---
-    analysis_log.append("Generating Final Biodiversity Report...")
+        sequence_vectors = explorer_step_1_vectorize(unclassified_sequences)
+        cluster_labels = explorer_step_2_cluster(sequence_vectors)
+        explorer_report_content = explorer_step_3_interpret(unclassified_sequences, sequence_vectors, cluster_labels)
     
+    # --- 4. Generate Final Report ---
     sorted_results = sorted(classified_results.items(), key=lambda item: item[1], reverse=True)
     classified_results_str = 'No known organisms were identified.' if not classified_results else '\n'.join([f"- {genus}: {count} sequences" for genus, count in sorted_results])
 
     final_report_text = f"""
-GPU Status: {check_gpu_status()}
+GPU Status: {gpu_status}
 Input File: {Path(input_fasta_path).name}
 Total Sequences Analyzed: {len(input_sequences)}
 
@@ -254,7 +234,6 @@ Part 2: Novel Taxa Discovery (Explorer Results)
     
     return {
         "status": "success",
-        "log": analysis_log,
         "report_content": final_report_text.strip(),
         "classified_results": {k: v for k, v in classified_results.items()},
     }

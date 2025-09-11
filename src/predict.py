@@ -176,7 +176,9 @@ def run_analysis(input_fasta_path):
     if unclassified_sequences:
         print("\n--- Step 3: Starting 'Explorer' AI Pipeline ---")
         
-        temp_fasta_path = REPORTS_DIR / "temp_unclassified.fasta"
+        temp_dir = REPORTS_DIR / "temp"
+        temp_dir.mkdir(exist_ok=True)
+        temp_fasta_path = temp_dir / "unclassified_sequences.fasta"
         SeqIO.write(unclassified_sequences, temp_fasta_path, "fasta")
         
         explorer_scripts = [
@@ -185,26 +187,58 @@ def run_analysis(input_fasta_path):
             "03_interpret_clusters.py"
         ]
         
-        for script in explorer_scripts:
-            script_path = SRC_DIR / "pipeline_explorer" / script
-            print(f"  - Running {script}...")
+        # --- FIX: Pass input file paths as arguments ---
+        # The original code was trying to run the scripts without the necessary arguments.
+        # This loop now constructs the correct arguments for each script.
+        vectorized_path = temp_dir / "explorer_sequence_vectors.npy"
+        ids_path = temp_dir / "explorer_sequence_ids.npy"
+        clusters_path = temp_dir / "explorer_cluster_results.csv"
+
+        try:
+            # 01_vectorize_sequences.py
+            script_path_1 = SRC_DIR / "pipeline_explorer" / explorer_scripts[0]
+            print(f"  - Running {explorer_scripts[0]}...")
             subprocess.run(
-                [sys.executable, str(script_path), "--input_fasta", str(temp_fasta_path)],
-                capture_output=True, text=True, check=True
+                [sys.executable, str(script_path_1), "--input_fasta", str(temp_fasta_path)],
+                check=True, capture_output=True, text=True
             )
-        
-        explorer_report_path = project_root / "explorer_final_report.txt"
-        if explorer_report_path.exists():
-            with open(explorer_report_path, 'r') as f:
-                explorer_report_content = f.read()
-            explorer_report_path.unlink() # Clean up explorer report
-        
-        temp_fasta_path.unlink() # Clean up temp FASTA file
-        print("  - Explorer pipeline complete.")
+            
+            # 02_cluster_sequences.py
+            script_path_2 = SRC_DIR / "pipeline_explorer" / explorer_scripts[1]
+            print(f"  - Running {explorer_scripts[1]}...")
+            subprocess.run(
+                [sys.executable, str(script_path_2), "--vectors_path", str(vectorized_path), "--ids_path", str(ids_path)],
+                check=True, capture_output=True, text=True
+            )
+            
+            # 03_interpret_clusters.py
+            script_path_3 = SRC_DIR / "pipeline_explorer" / explorer_scripts[2]
+            print(f"  - Running {explorer_scripts[2]}...")
+            subprocess.run(
+                [sys.executable, str(script_path_3), "--clusters_path", str(clusters_path), "--fasta_path", str(temp_fasta_path), "--vectors_path", str(vectorized_path)],
+                check=True, capture_output=True, text=True
+            )
+
+            # Read the final report
+            explorer_report_path = project_root / "explorer_final_report.txt"
+            if explorer_report_path.exists():
+                with open(explorer_report_path, 'r') as f:
+                    explorer_report_content = f.read()
+                explorer_report_path.unlink() # Clean up explorer report
+
+        except subprocess.CalledProcessError as e:
+            print(f"Subprocess failed with error: {e.stderr}", file=sys.stderr)
+            raise Exception(f"Explorer pipeline failed. Check the error logs for details.")
+
+        finally:
+            # Clean up the temporary directory
+            shutil.rmtree(temp_dir, ignore_errors=True)
+            print("  - Explorer pipeline complete.")
 
     # --- 5. Generate Final Report ---
     print("\n--- Step 4: Generating Final Biodiversity Report ---")
-    final_report_path = REPORTS_DIR / f"ATLAS_REPORT_{Path(input_fasta_path).stem}.txt"
+    report_file_name = f"ATLAS_REPORT_{Path(input_fasta_path).stem}_{uuid.uuid4().hex}.txt"
+    final_report_path = REPORTS_DIR / report_file_name
     
     with open(final_report_path, "w") as f:
         f.write("="*60 + "\n")

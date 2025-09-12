@@ -86,6 +86,10 @@ def get_kmer_counts(sequence: str, k: int) -> dict:
             counts[kmer] += 1
     return dict(counts)
 
+def sequence_to_kmers(sequence_str: str, k: int) -> list:
+    """Converts a DNA sequence string into a list of its k-mers."""
+    return [sequence_str[i:i+k] for i in range(len(sequence_str) - k + 1)]
+
 # --- Classifier Class ---
 
 class TaxonClassifier:
@@ -206,11 +210,12 @@ def explorer_step_1_vectorize(sequences: list) -> np.ndarray:
     
     corpus = [
         TaggedDocument(
-            words=[str(s.seq) for s in sequences], tags=[s.id]
+            words=sequence_to_kmers(str(s.seq), 6),
+            tags=[s.id]
         ) for s in sequences
     ]
     
-    sequence_vectors = np.array([doc2vec_model.dv[seq.id] for seq in corpus])
+    sequence_vectors = np.array([doc2vec_model.dv[seq.id] for seq in sequences])
     sequence_vectors = normalize(sequence_vectors)
     
     return sequence_vectors
